@@ -1,73 +1,100 @@
-# Welcome to your Lovable project
+# BetView
 
-## Project info
+BetView is a real-estate web application with a public browsing experience, admin dashboard, authentication, and password reset flow.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tech Stack
 
-## How can I edit this code?
+- React 18 + TypeScript
+- Vite
+- Tailwind CSS + shadcn/ui
+- Supabase (Auth + Database)
+- EmailJS (transactional email from frontend)
+- Vitest + Testing Library
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- Property browsing with map and compare tools
+- Authentication (sign in)
+- Forgot/reset password flow via Supabase Auth
+- Admin panel for users, listings, inquiries, reports, logs
+- Contact/demo request email integrations using EmailJS
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### 1. Install dependencies
 
-**Use your preferred IDE**
+```bash
+npm install
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 2. Configure environment
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Create `.env` from `.env.example` and set values.
 
-Follow these steps:
+Required keys:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```env
+VITE_SUPABASE_PROJECT_ID="your_project_id"
+VITE_SUPABASE_PUBLISHABLE_KEY="your_supabase_anon_key"
+VITE_SUPABASE_URL="https://your-project.supabase.co"
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+VITE_EMAILJS_SERVICE_ID="your_booking_service_id"
+VITE_EMAILJS_TEMPLATE_ID="your_booking_template_id"
+VITE_EMAILJS_PUBLIC_KEY="your_emailjs_public_key"
+VITE_EMAILJS_RECIPIENT_EMAIL="recipient@example.com"
 
-# Step 3: Install the necessary dependencies.
-npm i
+VITE_EMAILJS_SIGNUP_SERVICE_ID="your_signup_service_id"
+VITE_EMAILJS_SIGNUP_TEMPLATE_ID="your_signup_template_id"
+VITE_EMAILJS_SIGNUP_PUBLIC_KEY="your_signup_public_key"
+VITE_EMAILJS_SIGNUP_RECIPIENT_EMAIL="recipient@example.com"
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 3. Run locally
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### 4. Build for production
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm run build
+```
 
-**Use GitHub Codespaces**
+### 5. Preview production build
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+npm run preview
+```
 
-## What technologies are used for this project?
+## Scripts
 
-This project is built with:
+- `npm run dev`: Start development server
+- `npm run build`: Create production build
+- `npm run preview`: Preview production build
+- `npm run lint`: Run ESLint
+- `npm run test`: Run tests once
+- `npm run test:watch`: Run tests in watch mode
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Password Reset Flow (Supabase)
 
-## How can I deploy this project?
+- Forgot page sends reset email with:
+	- `supabase.auth.resetPasswordForEmail(email, { redirectTo })`
+- Reset page exchanges auth code and sets new password with:
+	- `supabase.auth.exchangeCodeForSession(code)`
+	- `supabase.auth.updateUser({ password })`
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Ensure your Supabase Auth redirect URLs include:
 
-## Can I connect a custom domain to my Lovable project?
+- `http://localhost:8080/reset-password` (or your local dev URL)
+- `https://your-domain.com/reset-password` (production)
 
-Yes, you can!
+## Deployment Notes
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- App is a static frontend build (Vite) backed by Supabase and EmailJS.
+- Deploy `dist/` to your static host (Vercel, Netlify, Cloudflare Pages, etc.).
+- Set all `VITE_*` environment variables in your hosting platform.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Repository
+
+GitHub: `https://github.com/BLA573/BetView`
