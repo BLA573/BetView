@@ -1,0 +1,184 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Core palette — deep navy + electric blue */
+    --background: 0 0% 100%;
+    --foreground: 215 66% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 66% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 66% 10%;
+
+    --primary: 214 80% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 40% 96%;
+    --secondary-foreground: 215 66% 15%;
+
+    --muted: 215 30% 95%;
+    --muted-foreground: 215 20% 50%;
+
+    --accent: 199 89% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 88%;
+    --input: 215 25% 88%;
+    --ring: 214 80% 40%;
+
+    --radius: 0.75rem;
+
+    /* Brand tokens */
+    --navy: 215 66% 10%;
+    --navy-mid: 215 55% 18%;
+    --navy-light: 215 40% 28%;
+    --blue-electric: 214 80% 50%;
+    --blue-glow: 199 89% 55%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(215, 66%, 8%) 0%, hsl(215, 55%, 18%) 50%, hsl(214, 68%, 28%) 100%);
+    --gradient-blue: linear-gradient(135deg, hsl(214, 80%, 40%) 0%, hsl(199, 89%, 48%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%) 0%, hsl(215, 40%, 97%) 100%);
+    --gradient-dark-card: linear-gradient(145deg, hsl(215, 55%, 14%) 0%, hsl(215, 60%, 20%) 100%);
+
+    /* Shadows */
+    --shadow-blue: 0 8px 32px -8px hsl(214, 80%, 40% / 0.35);
+    --shadow-card: 0 4px 24px -4px hsl(215, 66%, 10% / 0.10);
+    --shadow-hero: 0 20px 60px -12px hsl(215, 66%, 10% / 0.4);
+
+    /* Sidebar (unused but required) */
+    --sidebar-background: 215 66% 10%;
+    --sidebar-foreground: 215 30% 90%;
+    --sidebar-primary: 214 80% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 50% 20%;
+    --sidebar-accent-foreground: 215 30% 90%;
+    --sidebar-border: 215 40% 20%;
+    --sidebar-ring: 214 80% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+@layer utilities {
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-blue {
+    background: var(--gradient-blue);
+  }
+
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+
+  .gradient-dark-card {
+    background: var(--gradient-dark-card);
+  }
+
+  .shadow-blue {
+    box-shadow: var(--shadow-blue);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-hero {
+    box-shadow: var(--shadow-hero);
+  }
+
+  .text-navy {
+    color: hsl(var(--navy));
+  }
+
+  .text-blue-electric {
+    color: hsl(var(--blue-electric));
+  }
+
+  .bg-navy {
+    background-color: hsl(var(--navy));
+  }
+
+  .bg-navy-mid {
+    background-color: hsl(var(--navy-mid));
+  }
+
+  .animate-fade-up {
+    animation: fadeUp 0.7s ease-out both;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out both;
+  }
+
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-600 { animation-delay: 600ms; }
+  .animation-delay-800 { animation-delay: 800ms; }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .glass-dark {
+    background: rgba(10, 18, 40, 0.7);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse-blue {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(214, 80%, 50% / 0.4); }
+  50% { box-shadow: 0 0 0 14px hsl(214, 80%, 50% / 0); }
+}
+
+.pulse-blue {
+  animation: pulse-blue 2.5s ease-in-out infinite;
+}
