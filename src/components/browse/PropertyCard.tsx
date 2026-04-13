@@ -37,9 +37,8 @@ const PropertyCard = ({
     role="button"
     tabIndex={0}
     aria-label={`Open details for ${p.title}`}
-    className={`group text-left rounded-xl overflow-hidden border bg-card shadow-card hover:shadow-blue transition-all duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-ring ${
-      isHighlighted ? "border-primary ring-2 ring-primary/30 shadow-blue" : "border-border"
-    } ${isCompare ? "ring-2 ring-accent/50" : ""}`}
+    className={`group text-left rounded-xl overflow-hidden border bg-card shadow-card hover:shadow-blue transition-all duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-ring ${isHighlighted ? "border-primary ring-2 ring-primary/30 shadow-blue" : "border-border"
+      } ${isCompare ? "ring-2 ring-accent/50" : ""}`}
   >
     <div className="relative h-52 overflow-hidden">
       <img
@@ -58,13 +57,12 @@ const PropertyCard = ({
       <button
         onClick={(e) => onToggleCompare(p.id, e)}
         disabled={compareDisabled && !isCompare}
-        className={`absolute bottom-3 right-3 px-2.5 py-1.5 rounded-lg text-xs font-medium backdrop-blur flex items-center gap-1 transition-all ${
-          isCompare
+        className={`absolute bottom-3 right-3 px-2.5 py-1.5 rounded-lg text-xs font-medium backdrop-blur flex items-center gap-1 transition-all ${isCompare
             ? "bg-accent text-accent-foreground"
             : compareDisabled
-            ? "bg-background/50 text-muted-foreground cursor-not-allowed"
-            : "bg-background/80 text-foreground hover:bg-background"
-        }`}
+              ? "bg-background/50 text-muted-foreground cursor-not-allowed"
+              : "bg-background/80 text-foreground hover:bg-background"
+          }`}
         aria-label="Toggle compare"
       >
         <GitCompareArrows className="w-3.5 h-3.5" />

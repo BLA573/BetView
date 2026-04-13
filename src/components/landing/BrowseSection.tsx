@@ -247,11 +247,10 @@ const FilterGroup = ({
       <button
         key={opt}
         onClick={() => onChange(opt)}
-        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-          value === opt
+        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${value === opt
             ? "gradient-blue text-primary-foreground shadow-blue"
             : "bg-secondary text-secondary-foreground hover:bg-accent/20"
-        }`}
+          }`}
       >
         {opt}
       </button>
