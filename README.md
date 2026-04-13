@@ -41,12 +41,6 @@ VITE_SUPABASE_URL="https://your-project.supabase.co"
 VITE_EMAILJS_SERVICE_ID="your_booking_service_id"
 VITE_EMAILJS_TEMPLATE_ID="your_booking_template_id"
 VITE_EMAILJS_PUBLIC_KEY="your_emailjs_public_key"
-VITE_EMAILJS_RECIPIENT_EMAIL="recipient@example.com"
-
-VITE_EMAILJS_SIGNUP_SERVICE_ID="your_signup_service_id"
-VITE_EMAILJS_SIGNUP_TEMPLATE_ID="your_signup_template_id"
-VITE_EMAILJS_SIGNUP_PUBLIC_KEY="your_signup_public_key"
-VITE_EMAILJS_SIGNUP_RECIPIENT_EMAIL="recipient@example.com"
 ```
 
 ### 3. Run locally

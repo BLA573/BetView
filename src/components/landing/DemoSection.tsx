@@ -1,23 +1,62 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import apartment360 from "@/assets/apartment-360.jpg";
+
+type DemoSource = "auto" | "manual_url" | "property";
 
 const DemoSection = () => {
   const [tourUrl, setTourUrl] = useState<string | null>(null);
   const [showTour, setShowTour] = useState(false);
+  const [fallbackMessage, setFallbackMessage] = useState("Drag to explore • Pinch to zoom");
 
   useEffect(() => {
-    const fetchFirst = async () => {
-      const { data } = await supabase
+    const fetchFeaturedDemo = async () => {
+      const { data: settings } = await supabase
+        .from("platform_settings")
+        .select("dashboard_demo_tour_url, dashboard_demo_source, featured_property_id")
+        .eq("id", 1)
+        .maybeSingle();
+
+      const source = (settings?.dashboard_demo_source || "auto") as DemoSource;
+
+      if (source === "manual_url" && settings?.dashboard_demo_tour_url) {
+        setTourUrl(settings.dashboard_demo_tour_url);
+        setFallbackMessage("Drag to explore • Pinch to zoom");
+        return;
+      }
+
+      if (source === "property" && settings?.featured_property_id) {
+        const { data: featuredProperty } = await supabase
+          .from("properties")
+          .select("tour_url")
+          .eq("id", settings.featured_property_id)
+          .maybeSingle();
+
+        if (featuredProperty?.tour_url) {
+          setTourUrl(featuredProperty.tour_url);
+          setFallbackMessage("Drag to explore • Pinch to zoom");
+          return;
+        }
+      }
+
+      const { data: autoProperty } = await supabase
         .from("properties")
         .select("tour_url")
         .not("tour_url", "is", null)
-        .order("created_at", { ascending: true })
+        .order("updated_at", { ascending: false })
         .limit(1)
-        .single();
-      if (data?.tour_url) setTourUrl(data.tour_url);
+        .maybeSingle();
+
+      if (autoProperty?.tour_url) {
+        setTourUrl(autoProperty.tour_url);
+        setFallbackMessage("Drag to explore • Pinch to zoom");
+      } else {
+        setTourUrl(null);
+        setFallbackMessage("No live demo configured yet");
+      }
     };
-    fetchFirst();
+
+    fetchFeaturedDemo();
   }, []);
 
   return (
@@ -66,11 +105,11 @@ const DemoSection = () => {
                   className={`w-20 h-20 rounded-full gradient-blue flex items-center justify-center shadow-blue pulse-blue mb-6 transition-transform ${tourUrl ? 'hover:scale-110 cursor-pointer' : 'opacity-60 cursor-not-allowed'}`}
                 >
                   <svg className="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M5 3l14 9-14 9V3z"/>
+                    <path d="M5 3l14 9-14 9V3z" />
                   </svg>
                 </button>
                 <span className="text-white font-display font-semibold text-lg">Launch 360° Virtual Tour</span>
-                <span className="text-white/50 text-sm mt-1">Drag to explore • Pinch to zoom</span>
+                <span className="text-white/50 text-sm mt-1">{fallbackMessage}</span>
               </div>
             </>
           )}

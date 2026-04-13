@@ -1,56 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
-
-const sendSignupConfirmationEmail = async (payload: {
-  email: string;
-  displayName: string;
-}) => {
-  const serviceId = import.meta.env.VITE_EMAILJS_SIGNUP_SERVICE_ID;
-  const templateId = import.meta.env.VITE_EMAILJS_SIGNUP_TEMPLATE_ID;
-  const publicKey = import.meta.env.VITE_EMAILJS_SIGNUP_PUBLIC_KEY;
-  const recipientEmail = (payload.email || "").trim();
-
-  if (!serviceId || !templateId || !publicKey) {
-    throw new Error("Signup email service is not configured.");
-  }
-
-  if (!recipientEmail) {
-    throw new Error("Signup recipient email is empty.");
-  }
-
-  const response = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      service_id: serviceId,
-      template_id: templateId,
-      user_id: publicKey,
-      template_params: {
-        to_email: recipientEmail,
-        to: recipientEmail,
-        recipient_email: recipientEmail,
-        user_email: payload.email,
-        reply_to: payload.email,
-        user_name: payload.displayName || payload.email,
-        app_name: "BetView",
-        login_url: `${window.location.origin}/auth`,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Failed to send signup confirmation email.");
-  }
-};
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -103,17 +57,22 @@ const Auth = () => {
 
         toast({ title: "Welcome back!" });
       } else {
-        await sendSignupConfirmationEmail({
+        const { error } = await supabase.auth.signUp({
           email,
-          displayName,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth`,
+            data: {
+              display_name: displayName,
+            },
+          },
         });
+        if (error) throw error;
 
         toast({
-          title: "Signup request sent",
-          description: "Your request was sent via EmailJS.",
+          title: "Verification email sent",
+          description: "Please check your inbox and confirm your email before logging in.",
         });
-
-        navigate("/auth", { replace: true });
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Something went wrong.";
