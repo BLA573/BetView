@@ -23,7 +23,7 @@ const BrowseSection = () => {
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
   const [compareOpen, setCompareOpen] = useState(false);
-  const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     try {

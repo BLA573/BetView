@@ -11,7 +11,7 @@ interface PropertyCardProps {
   onToggleFavorite: (id: string, e: React.MouseEvent) => void;
   onToggleCompare: (id: string, e: React.MouseEvent) => void;
   compareDisabled: boolean;
-  cardRef?: React.Ref<HTMLButtonElement>;
+  cardRef?: React.Ref<HTMLDivElement>;
 }
 
 const PropertyCard = ({
@@ -25,9 +25,18 @@ const PropertyCard = ({
   compareDisabled,
   cardRef,
 }: PropertyCardProps) => (
-  <button
+  <div
     ref={cardRef}
     onClick={() => onOpen(p)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onOpen(p);
+      }
+    }}
+    role="button"
+    tabIndex={0}
+    aria-label={`Open details for ${p.title}`}
     className={`group text-left rounded-xl overflow-hidden border bg-card shadow-card hover:shadow-blue transition-all duration-300 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-ring ${
       isHighlighted ? "border-primary ring-2 ring-primary/30 shadow-blue" : "border-border"
     } ${isCompare ? "ring-2 ring-accent/50" : ""}`}
@@ -76,7 +85,7 @@ const PropertyCard = ({
       </div>
       {p.highlight && <p className="mt-3 text-xs text-accent font-medium">{p.highlight}</p>}
     </div>
-  </button>
+  </div>
 );
 
 export default PropertyCard;
