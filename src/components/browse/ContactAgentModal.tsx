@@ -15,7 +15,7 @@ interface Props {
 }
 
 const ContactAgentModal = ({ propertyId, propertyTitle, open, onClose }: Props) => {
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
   const { toast } = useToast();
   const [name, setName] = useState("");
   const [email, setEmail] = useState(user?.email || "");
@@ -37,6 +37,7 @@ const ContactAgentModal = ({ propertyId, propertyTitle, open, onClose }: Props) 
       email: email.trim(),
       phone: phone.trim() || null,
       message: message.trim(),
+      is_priority: isPremium, // Sets true if they are a premium buyer
     });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -59,6 +60,11 @@ const ContactAgentModal = ({ propertyId, propertyTitle, open, onClose }: Props) 
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isPremium && (
+              <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-700 px-3 py-2 rounded-lg text-sm flex items-center gap-2 mb-2">
+                <span className="font-bold flex items-center gap-1">⭐ Premium:</span> Your inquiry will be marked as priority and routed to the top of the agent's inbox.
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Name</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} required />

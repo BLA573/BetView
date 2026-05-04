@@ -5,3 +5,7 @@
 
 # server env
 .env.server
+
+# local scratch/export files that may contain secrets
+env.txt
+cookies.txt

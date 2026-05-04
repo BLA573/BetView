@@ -14,6 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
+      agencies: {
+        Row: {
+          id: string
+          name: string
+          email: string | null
+          website: string | null
+          logo_url: string | null
+          description: string | null
+          phone: string
+          address: string | null
+          license_number: string | null
+          status: string
+          plan_tier: string
+          approved_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email?: string | null
+          website?: string | null
+          logo_url?: string | null
+          description?: string | null
+          phone?: string
+          address?: string | null
+          license_number?: string | null
+          status?: string
+          plan_tier?: string
+          approved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string | null
+          website?: string | null
+          logo_url?: string | null
+          description?: string | null
+          phone?: string
+          address?: string | null
+          license_number?: string | null
+          status?: string
+          plan_tier?: string
+          approved_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agency_members: {
+        Row: {
+          id: string
+          user_id: string
+          agency_id: string
+          role: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          agency_id: string
+          role?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          agency_id?: string
+          role?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agency_members_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_logs: {
         Row: {
           action: string
@@ -43,6 +126,60 @@ export type Database = {
           target_table?: string | null
         }
         Relationships: []
+      }
+      featured_listings: {
+        Row: {
+          id: string
+          property_id: string
+          agency_id: string
+          duration_days: number | null
+          price: number
+          status: string | null
+          approved_by: string | null
+          start_date: string | null
+          end_date: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          property_id: string
+          agency_id: string
+          duration_days?: number | null
+          price: number
+          status?: string | null
+          approved_by?: string | null
+          start_date?: string | null
+          end_date?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          property_id?: string
+          agency_id?: string
+          duration_days?: number | null
+          price?: number
+          status?: string | null
+          approved_by?: string | null
+          start_date?: string | null
+          end_date?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_listings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "featured_listings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       inquiries: {
         Row: {
@@ -145,14 +282,41 @@ export type Database = {
         }
         Relationships: []
       }
+      premium_requests: {
+        Row: {
+          id: string
+          user_id: string
+          status: string
+          approved_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          status?: string
+          approved_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          status?: string
+          approved_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       properties: {
         Row: {
+          agency_id: string | null
           available: string
           base_rent: string | null
           created_at: string
           description: string
           id: string
           images: string[]
+          is_verified: boolean
+          is_featured: boolean
           lat: number
           living_space: string | null
           lng: number
@@ -171,12 +335,15 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agency_id?: string | null
           available?: string
           base_rent?: string | null
           created_at?: string
           description?: string
           id?: string
           images?: string[]
+          is_verified?: boolean
+          is_featured?: boolean
           lat?: number
           living_space?: string | null
           lng?: number
@@ -195,12 +362,15 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agency_id?: string | null
           available?: string
           base_rent?: string | null
           created_at?: string
           description?: string
           id?: string
           images?: string[]
+          is_verified?: boolean
+          is_featured?: boolean
           lat?: number
           living_space?: string | null
           lng?: number
@@ -218,7 +388,15 @@ export type Database = {
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "properties_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
@@ -288,6 +466,41 @@ export type Database = {
           },
         ]
       }
+      property_alerts: {
+        Row: {
+          id: string
+          user_id: string
+          property_id: string
+          alert_type: string | null
+          enabled: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          property_id: string
+          alert_type?: string | null
+          enabled?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          property_id?: string
+          alert_type?: string | null
+          enabled?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_alerts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -311,6 +524,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      register_agency_account: {
+        Args: {
+          _email?: string | null
+          _license_number?: string | null
+          _name: string
+          _phone: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -318,9 +540,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_user_agency_id: {
+        Args: {
+          _user_id: string
+        }
+        Returns: string | null
+      }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "agency" | "premium_buyer" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -448,7 +676,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "agency", "premium_buyer", "user"],
     },
   },
 } as const

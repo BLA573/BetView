@@ -25,7 +25,7 @@ const AdminReports = () => {
     setLoading(true);
     const { data } = await supabase
       .from("reports")
-      .select("*")
+      .select("id, reporter_id, target_type, target_id, reason, status, admin_notes, created_at")
       .order("created_at", { ascending: false });
     setReports((data as Report[]) || []);
     setLoading(false);

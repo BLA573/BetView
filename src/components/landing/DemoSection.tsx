@@ -10,6 +10,16 @@ const DemoSection = () => {
   const [fallbackMessage, setFallbackMessage] = useState("Drag to explore • Pinch to zoom");
 
   useEffect(() => {
+    const normalizeTourUrl = (candidate: string | null | undefined) => {
+      if (!candidate) return null;
+      try {
+        const parsed = new URL(candidate);
+        return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.toString() : null;
+      } catch {
+        return null;
+      }
+    };
+
     const fetchFeaturedDemo = async () => {
       const { data: settings } = await supabase
         .from("platform_settings")
@@ -20,9 +30,12 @@ const DemoSection = () => {
       const source = (settings?.dashboard_demo_source || "auto") as DemoSource;
 
       if (source === "manual_url" && settings?.dashboard_demo_tour_url) {
-        setTourUrl(settings.dashboard_demo_tour_url);
-        setFallbackMessage("Drag to explore • Pinch to zoom");
-        return;
+        const manualUrl = normalizeTourUrl(settings.dashboard_demo_tour_url);
+        if (manualUrl) {
+          setTourUrl(manualUrl);
+          setFallbackMessage("Drag to explore • Pinch to zoom");
+          return;
+        }
       }
 
       if (source === "property" && settings?.featured_property_id) {
@@ -32,8 +45,9 @@ const DemoSection = () => {
           .eq("id", settings.featured_property_id)
           .maybeSingle();
 
-        if (featuredProperty?.tour_url) {
-          setTourUrl(featuredProperty.tour_url);
+        const propertyUrl = normalizeTourUrl(featuredProperty?.tour_url);
+        if (propertyUrl) {
+          setTourUrl(propertyUrl);
           setFallbackMessage("Drag to explore • Pinch to zoom");
           return;
         }
@@ -47,8 +61,9 @@ const DemoSection = () => {
         .limit(1)
         .maybeSingle();
 
-      if (autoProperty?.tour_url) {
-        setTourUrl(autoProperty.tour_url);
+      const autoUrl = normalizeTourUrl(autoProperty?.tour_url);
+      if (autoUrl) {
+        setTourUrl(autoUrl);
         setFallbackMessage("Drag to explore • Pinch to zoom");
       } else {
         setTourUrl(null);

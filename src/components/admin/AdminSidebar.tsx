@@ -3,9 +3,12 @@ import {
   Building2,
   Users,
   MessageSquare,
+  ScanLine,
   Flag,
   Activity,
   Settings,
+  Star,
+  Briefcase,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -25,8 +28,12 @@ import {
 const navItems = [
   { title: "Overview", url: "/admin", icon: LayoutDashboard },
   { title: "Listings", url: "/admin/listings", icon: Building2 },
+  { title: "Agencies", url: "/admin/agencies", icon: Briefcase },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Inquiries", url: "/admin/inquiries", icon: MessageSquare },
+  { title: "Premium Requests", url: "/admin/premium", icon: Star },
+  { title: "Featured Listings", url: "/admin/featured", icon: Star },
+  { title: "Scan Requests", url: "/admin/scan-requests", icon: ScanLine },
   { title: "Reports", url: "/admin/reports", icon: Flag },
   { title: "Activity Logs", url: "/admin/activity", icon: Activity },
   { title: "Settings", url: "/admin/settings", icon: Settings },

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const HeroSection = () => {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin, isAgency, signOut } = useAuth();
   const scrollToForm = () => {
     document.getElementById("booking-form")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -36,11 +36,18 @@ const HeroSection = () => {
         </div>
         <div className="hidden md:flex items-center gap-8">
           <a href="#vr-demo" className="text-sm text-white/70 hover:text-white transition-colors">VR Demo</a>
-          <a href="/browse" className="text-sm text-white/70 hover:text-white transition-colors">Browse</a>
+          <Link to="/browse" className="text-sm text-white/70 hover:text-white transition-colors">Browse</Link>
+          <Link to="/pricing" className="text-sm text-white/70 hover:text-white transition-colors">Pricing</Link>
           <a href="#solution" className="text-sm text-white/70 hover:text-white transition-colors">How It Works</a>
           <a href="#agencies" className="text-sm text-white/70 hover:text-white transition-colors">For Agencies</a>
           {isAdmin && (
             <Link to="/admin" className="text-sm text-white/70 hover:text-white transition-colors">Admin</Link>
+          )}
+          {isAgency && (
+            <Link to="/agency" className="text-sm text-white/70 hover:text-white transition-colors">Dashboard</Link>
+          )}
+          {user && !isAgency && !isAdmin && (
+            <Link to="/profile" className="text-sm text-white/70 hover:text-white transition-colors">Profile</Link>
           )}
           {user ? (
             <button onClick={signOut} className="px-5 py-2 rounded-lg gradient-blue text-sm font-medium text-white shadow-blue hover:opacity-90 transition-opacity">
@@ -85,7 +92,7 @@ const HeroSection = () => {
           >
             <span className="w-5 h-5 rounded-full border border-white/50 flex items-center justify-center">
               <svg className="w-2.5 h-2.5 ml-0.5" fill="currentColor" viewBox="0 0 8 10">
-                <path d="M0 0l8 5-8 5V0z"/>
+                <path d="M0 0l8 5-8 5V0z" />
               </svg>
             </span>
             View VR Demo

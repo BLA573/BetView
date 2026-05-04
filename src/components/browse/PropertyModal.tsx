@@ -21,6 +21,15 @@ const PropertyModal = ({ property, onClose, isFavorite, onToggleFavorite }: Prop
 
   if (!property) return null;
   const p = property;
+  const safeTourUrl = (() => {
+    if (!p.tourUrl) return null;
+    try {
+      const parsed = new URL(p.tourUrl);
+      return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.toString() : null;
+    } catch {
+      return null;
+    }
+  })();
 
   const handleShare = () => {
     const url = `${window.location.origin}/browse?property=${p.id}`;
@@ -87,7 +96,7 @@ const PropertyModal = ({ property, onClose, isFavorite, onToggleFavorite }: Prop
               <InfoBlock label="Type" value={p.type} />
             </div>
 
-            {p.tourUrl ? (
+            {safeTourUrl ? (
               <>
                 <button onClick={() => setShowTour((v) => !v)} className="w-full py-4 rounded-xl gradient-blue text-primary-foreground font-semibold shadow-blue hover:opacity-90 transition-all flex items-center justify-center gap-2 text-base">
                   <Eye className="w-5 h-5" />
@@ -95,7 +104,7 @@ const PropertyModal = ({ property, onClose, isFavorite, onToggleFavorite }: Prop
                 </button>
                 {showTour && (
                   <div className="rounded-xl overflow-hidden border border-border aspect-video">
-                    <iframe src={p.tourUrl} title="360° Virtual Tour" width="100%" height="100%" allowFullScreen allow="autoplay; fullscreen; web-share; xr-spatial-tracking" className="w-full h-full" style={{ border: 0 }} />
+                    <iframe src={safeTourUrl} title="360° Virtual Tour" width="100%" height="100%" allowFullScreen allow="autoplay; fullscreen; web-share; xr-spatial-tracking" className="w-full h-full" style={{ border: 0 }} />
                   </div>
                 )}
               </>

@@ -54,7 +54,7 @@ const PropertyMap = ({ properties, focusedId, onMarkerClick }: Props) => {
 
   return (
     <div className="rounded-xl overflow-hidden border border-border h-72 md:h-80">
-      <MapContainer center={center} zoom={12} scrollWheelZoom={false} className="h-full w-full z-0">
+      <MapContainer center={center} zoom={12} scrollWheelZoom={false} preferCanvas={true} className="h-full w-full z-0">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

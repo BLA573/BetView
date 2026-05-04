@@ -22,6 +22,8 @@ export type Property = {
   lat: number;
   lng: number;
   tourUrl?: string;
+  is_verified?: boolean;
+  is_featured?: boolean;
 };
 
 type PropertyRow = Tables<"properties">;
@@ -72,6 +74,8 @@ export const mapDbProperty = (row: PropertyRow): Property => ({
   lat: row.lat,
   lng: row.lng,
   tourUrl: row.tour_url || undefined,
+  is_verified: row.is_verified || false,
+  is_featured: row.is_featured || false,
 });
 
 function extractCity(location: string): string {

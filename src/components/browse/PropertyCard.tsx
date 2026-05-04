@@ -46,7 +46,11 @@ const PropertyCard = ({
         alt={p.title}
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
       />
-      <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs">{p.mode}</Badge>
+      <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+        <Badge className="bg-primary text-primary-foreground text-xs w-max">{p.mode}</Badge>
+        {p.is_featured && <Badge className="bg-yellow-500 text-yellow-950 text-xs w-max border-none">Early Access</Badge>}
+        {p.is_verified && <Badge className="bg-emerald-500 text-white text-xs w-max border-none">Verified</Badge>}
+      </div>
       <button
         onClick={(e) => onToggleFavorite(p.id, e)}
         className="absolute top-3 right-3 w-9 h-9 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background transition"

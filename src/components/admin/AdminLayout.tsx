@@ -1,8 +1,7 @@
-import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { Navigate } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopBar from "./AdminTopBar";
 
@@ -12,11 +11,6 @@ interface Props {
 
 const AdminLayout = ({ children }: Props) => {
   const { user, isAdmin, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && (!user || !isAdmin)) navigate("/");
-  }, [user, isAdmin, loading, navigate]);
 
   if (loading) {
     return (
@@ -26,7 +20,9 @@ const AdminLayout = ({ children }: Props) => {
     );
   }
 
-  if (!user || !isAdmin) return null;
+  if (!user || !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <SidebarProvider>

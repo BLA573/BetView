@@ -22,7 +22,7 @@ const AdminActivityLogs = () => {
     const fetchLogs = async () => {
       const { data } = await supabase
         .from("activity_logs")
-        .select("*")
+        .select("id, admin_id, action, target_table, target_id, details, created_at")
         .order("created_at", { ascending: false })
         .limit(100);
       setLogs((data as LogEntry[]) || []);

@@ -16,7 +16,9 @@ export const env = {
     supabaseUrl: getEnv("SUPABASE_URL"),
     supabaseAnonKey: getEnv("SUPABASE_ANON_KEY"),
     supabaseServiceRoleKey: getEnv("SUPABASE_SERVICE_ROLE_KEY"),
-    supabaseEmailRedirectTo: process.env.SUPABASE_EMAIL_REDIRECT_TO || "http://localhost:5173/auth",
+    supabaseEmailRedirectTo: process.env.SUPABASE_EMAIL_REDIRECT_TO || "http://localhost:5173/reset-password",
     cookieDomain: process.env.COOKIE_DOMAIN || "",
-    cookieSecure: process.env.COOKIE_SECURE === "true",
+    cookieSecure: process.env.COOKIE_SECURE
+        ? process.env.COOKIE_SECURE === "true"
+        : !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(getEnv("FRONTEND_ORIGIN", "http://localhost:5173")),
 };

@@ -17,6 +17,7 @@ const MODES = ["Rent", "Buy"] as const;
 const TYPES = ["Villa", "Apartment", "Penthouse", "Studio", "House", "Duplex", "Commercial"];
 
 type PropertyFormState = {
+  agency_id: string;
   title: string;
   description: string;
   location: string;
@@ -37,11 +38,19 @@ type PropertyFormState = {
   transport: string;
 };
 
+type AgencyOption = {
+  id: string;
+  name: string;
+};
+
 const PropertyFormModal = ({ propertyId, onClose, onSaved }: Props) => {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [agencies, setAgencies] = useState<AgencyOption[]>([]);
+  const [loadingAgencies, setLoadingAgencies] = useState(true);
   const [form, setForm] = useState<PropertyFormState>({
+    agency_id: "",
     title: "",
     description: "",
     location: "",
@@ -63,6 +72,35 @@ const PropertyFormModal = ({ propertyId, onClose, onSaved }: Props) => {
   });
 
   useEffect(() => {
+    let isMounted = true;
+
+    const fetchApprovedAgencies = async () => {
+      const { data, error } = await supabase
+        .from("agencies")
+        .select("id, name")
+        .eq("status", "approved")
+        .order("name", { ascending: true });
+
+      if (!isMounted) return;
+
+      if (error) {
+        toast({ title: "Failed to load agencies", description: error.message, variant: "destructive" });
+        setAgencies([]);
+      } else {
+        setAgencies((data as AgencyOption[]) || []);
+      }
+
+      setLoadingAgencies(false);
+    };
+
+    fetchApprovedAgencies();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [toast]);
+
+  useEffect(() => {
     if (propertyId) {
       supabase
         .from("properties")
@@ -72,6 +110,7 @@ const PropertyFormModal = ({ propertyId, onClose, onSaved }: Props) => {
         .then(({ data, error }) => {
           if (data && !error) {
             setForm({
+              agency_id: data.agency_id || "",
               title: data.title,
               description: data.description || "",
               location: data.location || "",
@@ -122,8 +161,13 @@ const PropertyFormModal = ({ propertyId, onClose, onSaved }: Props) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.agency_id) {
+      toast({ title: "Agency is required", description: "Select an approved agency before saving.", variant: "destructive" });
+      return;
+    }
+
     if (!form.title.trim() || !form.price.trim()) {
-      toast({ title: "Title and price are required", variant: "destructive" });
+      toast({ title: "Agency, title, and price are required", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -166,6 +210,25 @@ const PropertyFormModal = ({ propertyId, onClose, onSaved }: Props) => {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 space-y-2">
+              <Label>Agency *</Label>
+              <select
+                value={form.agency_id}
+                onChange={(e) => set("agency_id", e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                required
+                disabled={loadingAgencies || saving}
+              >
+                <option value="" disabled>
+                  {loadingAgencies ? "Loading approved agencies..." : "Select an approved agency"}
+                </option>
+                {agencies.map((agency) => (
+                  <option key={agency.id} value={agency.id}>
+                    {agency.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="col-span-2 space-y-2">
               <Label>Title *</Label>
               <Input value={form.title} onChange={(e) => set("title", e.target.value)} required />

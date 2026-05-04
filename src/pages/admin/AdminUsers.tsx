@@ -179,7 +179,7 @@ const AdminUsers = () => {
                             <UserCog className="w-4 h-4 text-muted-foreground" />
                           </button>
                           <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg p-2 hidden group-hover:block z-20 min-w-[120px]">
-                            {(["user", "moderator", "admin"] as AppRole[]).map((role) => {
+                            {(["user", "premium_buyer", "admin"] as AppRole[]).map((role) => {
                               const hasRole = u.roles.includes(role);
                               return (
                                 <button
