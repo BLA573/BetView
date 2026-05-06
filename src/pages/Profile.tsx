@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, MessageSquare, User, X } from "lucide-react";
+import { ArrowLeft, Loader2, MessageSquare, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -47,52 +47,28 @@ const Profile = () => {
   const [saved, setSaved] = useState<SavedItem[]>([]);
   const [inquiries, setInquiries] = useState<InquiryItem[]>([]);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
       setLoading(true);
-      const [{ data: savedData, error: savedError }, { data: inquiryData, error: inquiryError }] = await Promise.all([
+      const [{ data: profileData }, { data: savedData, error: savedError }, { data: inquiryData, error: inquiryError }] = await Promise.all([
+        supabase.from("profiles").select("display_name").eq("user_id", user.id).single(),
         supabase
           .from("saved_properties")
-          .select(`
-            id,
-            property_id,
-            created_at,
-            properties (
-              id,
-              title,
-              location,
-              price,
-              images,
-              is_verified,
-              is_featured
-            )
-          `)
+          .select(`id, property_id, created_at, properties ( id, title, location, price, images, is_verified, is_featured )`)
           .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
         supabase
           .from("inquiries")
-          .select(`
-            id,
-            property_id,
-            name,
-            email,
-            phone,
-            message,
-            created_at,
-            properties (
-              id,
-              title,
-              location,
-              price,
-              images
-            )
-          `)
+          .select(`id, property_id, name, email, phone, message, created_at, properties ( id, title, location, price, images )`)
           .eq("user_id", user.id)
           .order("created_at", { ascending: false }),
       ]);
+
+      setDisplayName(profileData?.display_name ?? null);
 
       if (savedError) {
         toast({ title: "Failed to load saved items", description: savedError.message, variant: "destructive" });
@@ -108,8 +84,6 @@ const Profile = () => {
 
     fetchData();
   }, [user]);
-
-  const initials = useMemo(() => user?.email?.[0]?.toUpperCase() || "?", [user]);
 
   const handleRemoveSaved = async (savedId: string) => {
     setRemovingId(savedId);
@@ -154,7 +128,9 @@ const Profile = () => {
               <User className="w-6 h-6 text-muted-foreground" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-3xl md:text-4xl text-foreground leading-none">My Account</h1>
+              <h1 className="font-display font-bold text-3xl md:text-4xl text-foreground leading-none">
+                {displayName || user?.email?.split("@")[0] || "My Account"}
+              </h1>
               <p className="text-sm md:text-base text-muted-foreground mt-1">{user?.email}</p>
             </div>
           </div>

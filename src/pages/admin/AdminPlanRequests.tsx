@@ -26,6 +26,7 @@ const AdminPlanRequests = () => {
   const [loading, setLoading] = useState(true);
   const [rejectDialog, setRejectDialog] = useState<{ id: string; agencyId: string; planName: string } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [rejectOther, setRejectOther] = useState("");
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -72,14 +73,17 @@ const AdminPlanRequests = () => {
 
   const handleReject = async () => {
     if (!rejectDialog) return;
+    const finalReason = rejectReason === "Other" ? rejectOther.trim() : rejectReason;
+    if (!finalReason) return;
     const { error } = await supabase
       .from("plan_purchase_requests")
-      .update({ status: "rejected", reject_reason: rejectReason })
+      .update({ status: "rejected", reject_reason: finalReason })
       .eq("id", rejectDialog.id);
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: "Request rejected." });
     setRejectDialog(null);
     setRejectReason("");
+    setRejectOther("");
     fetchRequests();
   };
 
@@ -199,12 +203,17 @@ const AdminPlanRequests = () => {
                 className="w-full border border-border rounded-lg px-3 py-2 bg-background text-foreground text-sm resize-none"
                 rows={3}
                 placeholder="Please provide more details…"
-                onChange={(e) => setRejectReason(e.target.value)}
+                value={rejectOther}
+                onChange={(e) => setRejectOther(e.target.value)}
               />
             )}
             <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => setRejectDialog(null)}>Cancel</Button>
-              <Button className="flex-1 bg-destructive text-white hover:bg-destructive/90" onClick={handleReject} disabled={!rejectReason}>
+              <Button variant="outline" className="flex-1" onClick={() => { setRejectDialog(null); setRejectReason(""); setRejectOther(""); }}>Cancel</Button>
+              <Button
+                className="flex-1 bg-destructive text-white hover:bg-destructive/90"
+                onClick={handleReject}
+                disabled={!rejectReason || (rejectReason === "Other" && !rejectOther.trim())}
+              >
                 Confirm Rejection
               </Button>
             </div>

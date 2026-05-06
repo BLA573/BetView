@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2, Check, X, Calendar, MapPin } from "lucide-react";
+import { sendVisitStatusNotification } from "@/lib/sendVisitStatusNotification";
 
 type VisitStatus = "pending" | "confirmed" | "rescheduled" | "rejected" | "cancelled";
 
@@ -40,10 +41,13 @@ const statusBadge = (status: VisitStatus) => {
 };
 
 const AgencyVisits = () => {
-  const { agencyId } = useAuth();
+  const { agencyId, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [visits, setVisits] = useState<VisitRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [noProperties, setNoProperties] = useState(false);
+  const [agencyName, setAgencyName] = useState("");
   const [rejectDialog, setRejectDialog] = useState<VisitRequest | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectOther, setRejectOther] = useState("");
@@ -52,26 +56,71 @@ const AgencyVisits = () => {
   const [newTime, setNewTime] = useState("");
 
   const fetchVisits = async () => {
-    if (!agencyId) return;
+    if (!agencyId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
-    const { data: props } = await supabase.from("properties").select("id, title").eq("agency_id", agencyId);
-    const propIds = (props || []).map((p: any) => p.id);
-    if (propIds.length === 0) { setLoading(false); setVisits([]); return; }
+    setFetchError(null);
+    setNoProperties(false);
 
+    // Step 1: get all property IDs belonging to this agency + agency name
+    const [propsRes, agencyRes] = await Promise.all([
+      supabase.from("properties").select("id, title").eq("agency_id", agencyId),
+      supabase.from("agencies").select("name").eq("id", agencyId).single(),
+    ]);
+
+    if (propsRes.error) {
+      setFetchError(propsRes.error.message);
+      toast({ title: "Error loading properties", description: propsRes.error.message, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    setAgencyName(agencyRes.data?.name ?? "");
+
+    const propList = propsRes.data || [];
+    const propIds = propList.map((p: { id: string; title: string }) => p.id);
+
+    // No properties linked to this agency yet — that's valid, not an error
+    if (propIds.length === 0) {
+      setNoProperties(true);
+      setVisits([]);
+      setLoading(false);
+      return;
+    }
+
+    // Step 2: fetch visit_requests for those property IDs
     const { data, error } = await supabase
       .from("visit_requests")
       .select("*")
       .in("property_id", propIds)
       .order("created_at", { ascending: false });
 
-    if (error) { toast({ title: "Error loading visits", description: error.message, variant: "destructive" }); }
+    if (error) {
+      setFetchError(error.message);
+      toast({ title: "Error loading visits", description: error.message, variant: "destructive" });
+      setVisits([]);
+      setLoading(false);
+      return;
+    }
 
-    const propMap = new Map((props || []).map((p: any) => [p.id, p.title]));
-    setVisits((data || []).map((v: any) => ({ ...v, property_title: propMap.get(v.property_id) || "Unknown" })));
+    // Build a title lookup map and attach property_title to each visit
+    const propMap = new Map(propList.map((p: { id: string; title: string }) => [p.id, p.title]));
+    const mapped = (data || []).map((v: any) => ({
+      ...v,
+      property_title: propMap.get(v.property_id) || "Unknown Property",
+    }));
+
+    setVisits(mapped);
     setLoading(false);
   };
 
-  useEffect(() => { fetchVisits(); }, [agencyId]);
+  useEffect(() => {
+    // Wait for auth to finish loading before fetching
+    if (authLoading) return;
+    fetchVisits();
+  }, [agencyId, authLoading]);
 
   const updateStatus = async (id: string, status: VisitStatus, extra?: object) => {
     const { error } = await supabase.from("visit_requests").update({ status, ...extra }).eq("id", id);
@@ -82,6 +131,16 @@ const AgencyVisits = () => {
   const handleAccept = async (visit: VisitRequest) => {
     if (await updateStatus(visit.id, "confirmed")) {
       toast({ title: "Visit confirmed!", description: `${visit.name} will be notified.` });
+      void sendVisitStatusNotification({
+        status:        "confirmed",
+        visitorEmail:  visit.email,
+        visitorName:   visit.name,
+        propertyTitle: visit.property_title ?? "your requested property",
+        agencyName,
+        confirmedDate: visit.preferred_date
+          ? `${visit.preferred_date}${visit.preferred_time ? ` at ${visit.preferred_time}` : ""}`
+          : "the agreed time",
+      });
       fetchVisits();
     }
   };
@@ -91,6 +150,14 @@ const AgencyVisits = () => {
     const reason = rejectReason === "Other" ? rejectOther : rejectReason;
     if (await updateStatus(rejectDialog.id, "rejected", { reject_reason: reason })) {
       toast({ title: "Visit rejected." });
+      void sendVisitStatusNotification({
+        status:        "rejected",
+        visitorEmail:  rejectDialog.email,
+        visitorName:   rejectDialog.name,
+        propertyTitle: rejectDialog.property_title ?? "your requested property",
+        agencyName,
+        rejectReason:  reason,
+      });
       setRejectDialog(null);
       setRejectReason("");
       setRejectOther("");
@@ -102,6 +169,14 @@ const AgencyVisits = () => {
     if (!rescheduleDialog || !newDate) return;
     if (await updateStatus(rescheduleDialog.id, "rescheduled", { proposed_date: newDate, proposed_time: newTime || null })) {
       toast({ title: "Reschedule proposed!", description: "The visitor will be notified." });
+      void sendVisitStatusNotification({
+        status:        "rescheduled",
+        visitorEmail:  rescheduleDialog.email,
+        visitorName:   rescheduleDialog.name,
+        propertyTitle: rescheduleDialog.property_title ?? "your requested property",
+        agencyName,
+        proposedDate:  `${newDate}${newTime ? ` at ${newTime}` : ""}`,
+      });
       setRescheduleDialog(null);
       setNewDate("");
       setNewTime("");
@@ -118,10 +193,22 @@ const AgencyVisits = () => {
         </div>
 
         <div className="rounded-xl border border-border bg-card overflow-hidden">
-          {loading ? (
+          {authLoading || loading ? (
             <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : fetchError ? (
+            <div className="text-center py-20 text-destructive text-sm px-6">
+              Failed to load visit requests: {fetchError}
+            </div>
+          ) : !agencyId ? (
+            <div className="text-center py-20 text-muted-foreground text-sm">
+              No agency profile is linked to this account.
+            </div>
           ) : visits.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">No visit requests yet.</div>
+            <div className="text-center py-20 text-muted-foreground">
+              {noProperties
+                ? "No properties are linked to your agency yet. Ask an admin to assign properties to your agency."
+                : "No visit requests yet."}
+            </div>
           ) : (
             <Table>
               <TableHeader>

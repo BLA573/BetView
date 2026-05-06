@@ -12,91 +12,33 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      agencies: {
-        Row: {
-          id: string
-          name: string
-          email: string | null
-          website: string | null
-          logo_url: string | null
-          description: string | null
-          phone: string
-          address: string | null
-          license_number: string | null
-          status: string
-          plan_tier: string
-          approved_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          email?: string | null
-          website?: string | null
-          logo_url?: string | null
-          description?: string | null
-          phone?: string
-          address?: string | null
-          license_number?: string | null
-          status?: string
-          plan_tier?: string
-          approved_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          email?: string | null
-          website?: string | null
-          logo_url?: string | null
-          description?: string | null
-          phone?: string
-          address?: string | null
-          license_number?: string | null
-          status?: string
-          plan_tier?: string
-          approved_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      agency_members: {
-        Row: {
-          id: string
-          user_id: string
-          agency_id: string
-          role: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          agency_id: string
-          role?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          agency_id?: string
-          role?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "agency_members_agency_id_fkey"
-            columns: ["agency_id"]
-            isOneToOne: false
-            referencedRelation: "agencies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       activity_logs: {
         Row: {
           action: string
@@ -127,44 +69,137 @@ export type Database = {
         }
         Relationships: []
       }
-      featured_listings: {
+      agencies: {
         Row: {
-          id: string
-          property_id: string
-          agency_id: string
-          duration_days: number | null
-          price: number
-          status: string | null
-          approved_by: string | null
-          start_date: string | null
-          end_date: string | null
+          address: string | null
+          approved_at: string | null
           created_at: string
+          created_by: string | null
+          description: string | null
+          email: string | null
+          id: string
+          license_number: string | null
+          logo_url: string | null
+          name: string
+          phone: string
+          plan_tier: string
+          status: string
+          updated_at: string
+          website: string | null
         }
         Insert: {
-          id?: string
-          property_id: string
-          agency_id: string
-          duration_days?: number | null
-          price: number
-          status?: string | null
-          approved_by?: string | null
-          start_date?: string | null
-          end_date?: string | null
+          address?: string | null
+          approved_at?: string | null
           created_at?: string
+          created_by?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          license_number?: string | null
+          logo_url?: string | null
+          name: string
+          phone?: string
+          plan_tier?: string
+          status?: string
+          updated_at?: string
+          website?: string | null
         }
         Update: {
-          id?: string
-          property_id?: string
-          agency_id?: string
-          duration_days?: number | null
-          price?: number
-          status?: string | null
-          approved_by?: string | null
-          start_date?: string | null
-          end_date?: string | null
+          address?: string | null
+          approved_at?: string | null
           created_at?: string
+          created_by?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          license_number?: string | null
+          logo_url?: string | null
+          name?: string
+          phone?: string
+          plan_tier?: string
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      agency_members: {
+        Row: {
+          agency_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "agency_members_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      featured_listings: {
+        Row: {
+          agency_id: string | null
+          approved_by: string | null
+          created_at: string | null
+          duration_days: number | null
+          end_date: string | null
+          id: string
+          price: number
+          property_id: string | null
+          start_date: string | null
+          status: string | null
+        }
+        Insert: {
+          agency_id?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          duration_days?: number | null
+          end_date?: string | null
+          id?: string
+          price: number
+          property_id?: string | null
+          start_date?: string | null
+          status?: string | null
+        }
+        Update: {
+          agency_id?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          duration_days?: number | null
+          end_date?: string | null
+          id?: string
+          price?: number
+          property_id?: string | null
+          start_date?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_listings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "featured_listings_property_id_fkey"
             columns: ["property_id"]
@@ -172,13 +207,6 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "featured_listings_agency_id_fkey"
-            columns: ["agency_id"]
-            isOneToOne: false
-            referencedRelation: "agencies"
-            referencedColumns: ["id"]
-          }
         ]
       }
       inquiries: {
@@ -186,6 +214,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          is_priority: boolean
           message: string
           name: string
           phone: string | null
@@ -197,6 +226,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          is_priority?: boolean
           message?: string
           name: string
           phone?: string | null
@@ -208,6 +238,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          is_priority?: boolean
           message?: string
           name?: string
           phone?: string | null
@@ -224,6 +255,159 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_records: {
+        Row: {
+          agency_id: string
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          paid_at: string
+          payment_type: string
+          recorded_by: string | null
+          reference: string | null
+        }
+        Insert: {
+          agency_id: string
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          payment_type: string
+          recorded_by?: string | null
+          reference?: string | null
+        }
+        Update: {
+          agency_id?: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string
+          payment_type?: string
+          recorded_by?: string | null
+          reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_records_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plan_purchase_requests: {
+        Row: {
+          agency_id: string | null
+          created_at: string
+          id: string
+          payment_method: string
+          plan_name: string
+          proof_path: string
+          reject_reason: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          agency_id?: string | null
+          created_at?: string
+          id?: string
+          payment_method: string
+          plan_name: string
+          proof_path: string
+          reject_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          agency_id?: string | null
+          created_at?: string
+          id?: string
+          payment_method?: string
+          plan_name?: string
+          proof_path?: string
+          reject_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_purchase_requests_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_settings: {
+        Row: {
+          created_at: string
+          dashboard_demo_source: string
+          dashboard_demo_tour_url: string | null
+          featured_property_id: string | null
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dashboard_demo_source?: string
+          dashboard_demo_tour_url?: string | null
+          featured_property_id?: string | null
+          id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dashboard_demo_source?: string
+          dashboard_demo_tour_url?: string | null
+          featured_property_id?: string | null
+          id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_settings_featured_property_fkey"
+            columns: ["featured_property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      premium_requests: {
+        Row: {
+          approved_at: string | null
+          created_at: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -255,57 +439,6 @@ export type Database = {
         }
         Relationships: []
       }
-      platform_settings: {
-        Row: {
-          created_at: string
-          dashboard_demo_source: string | null
-          dashboard_demo_tour_url: string | null
-          featured_property_id: string | null
-          id: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          dashboard_demo_source?: string | null
-          dashboard_demo_tour_url?: string | null
-          featured_property_id?: string | null
-          id?: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          dashboard_demo_source?: string | null
-          dashboard_demo_tour_url?: string | null
-          featured_property_id?: string | null
-          id?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      premium_requests: {
-        Row: {
-          id: string
-          user_id: string
-          status: string
-          approved_at: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          status?: string
-          approved_at?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          status?: string
-          approved_at?: string | null
-          created_at?: string
-        }
-        Relationships: []
-      }
       properties: {
         Row: {
           agency_id: string | null
@@ -315,8 +448,8 @@ export type Database = {
           description: string
           id: string
           images: string[]
+          is_featured: boolean | null
           is_verified: boolean
-          is_featured: boolean
           lat: number
           living_space: string | null
           lng: number
@@ -342,8 +475,8 @@ export type Database = {
           description?: string
           id?: string
           images?: string[]
+          is_featured?: boolean | null
           is_verified?: boolean
-          is_featured?: boolean
           lat?: number
           living_space?: string | null
           lng?: number
@@ -369,8 +502,8 @@ export type Database = {
           description?: string
           id?: string
           images?: string[]
+          is_featured?: boolean | null
           is_verified?: boolean
-          is_featured?: boolean
           lat?: number
           living_space?: string | null
           lng?: number
@@ -394,6 +527,41 @@ export type Database = {
             columns: ["agency_id"]
             isOneToOne: false
             referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_alerts: {
+        Row: {
+          alert_type: string | null
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          property_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alert_type?: string | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          property_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alert_type?: string | null
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          property_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_alerts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
@@ -466,39 +634,117 @@ export type Database = {
           },
         ]
       }
-      property_alerts: {
+      scan_requests: {
         Row: {
-          id: string
-          user_id: string
-          property_id: string
-          alert_type: string | null
-          enabled: boolean
+          address: string
+          agency_id: string
+          assigned_staff: string | null
+          contact_person: string
+          contact_phone: string
           created_at: string
+          id: string
+          notes: string | null
+          preferred_date: string | null
+          priority: string
+          property_id: string | null
+          property_type: string
+          size_estimate: string | null
+          status: string
+          updated_at: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          property_id: string
-          alert_type?: string | null
-          enabled?: boolean
+          address: string
+          agency_id: string
+          assigned_staff?: string | null
+          contact_person: string
+          contact_phone: string
           created_at?: string
+          id?: string
+          notes?: string | null
+          preferred_date?: string | null
+          priority?: string
+          property_id?: string | null
+          property_type: string
+          size_estimate?: string | null
+          status?: string
+          updated_at?: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          property_id?: string
-          alert_type?: string | null
-          enabled?: boolean
+          address?: string
+          agency_id?: string
+          assigned_staff?: string | null
+          contact_person?: string
+          contact_phone?: string
           created_at?: string
+          id?: string
+          notes?: string | null
+          preferred_date?: string | null
+          priority?: string
+          property_id?: string | null
+          property_type?: string
+          size_estimate?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "property_alerts_property_id_fkey"
+            foreignKeyName: "scan_requests_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scan_requests_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
             referencedColumns: ["id"]
-          }
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          agency_id: string
+          billing_cycle: string
+          created_at: string
+          end_date: string | null
+          id: string
+          start_date: string | null
+          status: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          billing_cycle?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          start_date?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          billing_cycle?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          start_date?: string | null
+          status?: string
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -519,20 +765,74 @@ export type Database = {
         }
         Relationships: []
       }
+      visit_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          name: string
+          phone: string
+          preferred_date: string | null
+          preferred_time: string | null
+          property_id: string | null
+          proposed_date: string | null
+          proposed_time: string | null
+          reject_reason: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          phone: string
+          preferred_date?: string | null
+          preferred_time?: string | null
+          property_id?: string | null
+          proposed_date?: string | null
+          proposed_time?: string | null
+          reject_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string
+          preferred_date?: string | null
+          preferred_time?: string | null
+          property_id?: string | null
+          proposed_date?: string | null
+          proposed_time?: string | null
+          reject_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visit_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      register_agency_account: {
-        Args: {
-          _email?: string | null
-          _license_number?: string | null
-          _name: string
-          _phone: string
-        }
-        Returns: string
-      }
+      get_user_agency_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -540,15 +840,18 @@ export type Database = {
         }
         Returns: boolean
       }
-      get_user_agency_id: {
+      register_agency_account: {
         Args: {
-          _user_id: string
+          _email?: string
+          _license_number?: string
+          _name: string
+          _phone: string
         }
-        Returns: string | null
+        Returns: string
       }
     }
     Enums: {
-      app_role: "admin" | "agency" | "premium_buyer" | "user"
+      app_role: "admin" | "moderator" | "user" | "agency" | "premium_buyer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -562,121 +865,124 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-  : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-  ? R
-  : never
+    ? R
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
-  : never
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
+      Insert: infer I
+    }
+    ? I
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Update: infer U
-  }
-  ? U
-  : never
+      Update: infer U
+    }
+    ? U
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Update: infer U
-  }
-  ? U
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema["Enums"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema["CompositeTypes"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
-      app_role: ["admin", "agency", "premium_buyer", "user"],
+      app_role: ["admin", "moderator", "user", "agency", "premium_buyer"],
     },
   },
 } as const

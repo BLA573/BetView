@@ -18,7 +18,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 type Errors = Partial<Record<keyof FormData, string>>;
 
-const EMAIL_RECIPIENT = "hailemichaelsolomon176@gmail.com";
+const EMAIL_RECIPIENT = "info@betview.et";
 
 const BookingForm = () => {
   const { toast } = useToast();

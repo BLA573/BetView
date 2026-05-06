@@ -5,25 +5,25 @@ import { Search, ArrowUpDown, GitCompareArrows, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cities, types, modes, sortOptions, parsePrice, parseSqm, mapDbProperty, type Property } from "@/components/browse/propertyData";
 import PropertyCard from "@/components/browse/PropertyCard";
-import PropertyModal from "@/components/browse/PropertyModal";
 import PropertyMap from "@/components/browse/PropertyMap";
 import CompareDrawer from "@/components/browse/CompareDrawer";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const MAX_COMPARE = 3;
 
 const BrowseSection = () => {
   const { user, isPremium } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [allProperties, setAllProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [cityFilter, setCityFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
   const [modeFilter, setModeFilter] = useState("All");
   const [verifiedFilter, setVerifiedFilter] = useState(false);
-  const [selected, setSelected] = useState<Property | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("default");
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
@@ -126,8 +126,8 @@ const BrowseSection = () => {
 
   const handleCardClick = useCallback((p: Property) => {
     setHighlightedId(p.id);
-    setSelected(p);
-  }, []);
+    navigate(`/property/${p.id}`);
+  }, [navigate]);
 
   const handleMarkerClick = useCallback((p: Property) => {
     setHighlightedId(p.id);
@@ -248,13 +248,6 @@ const BrowseSection = () => {
           </div>
         )}
       </div>
-
-      <PropertyModal
-        property={selected}
-        onClose={() => setSelected(null)}
-        isFavorite={selected ? favorites.has(selected.id) : false}
-        onToggleFavorite={toggleFavorite}
-      />
 
       <CompareDrawer
         items={compareItems}

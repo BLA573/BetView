@@ -185,7 +185,7 @@ const Checkout = () => {
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Account Number</span>
-                    <span className="font-medium text-foreground font-mono">1000123456789</span>
+                    <span className="font-medium text-foreground font-mono">1000396120023</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Account Name</span>
@@ -201,7 +201,7 @@ const Checkout = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Telebirr Number</span>
-                    <span className="font-medium text-foreground font-mono">+251 912 345 678</span>
+                    <span className="font-medium text-foreground font-mono">+251 931 503581 </span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Registered Name</span>

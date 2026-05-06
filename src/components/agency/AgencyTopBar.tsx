@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ArrowLeft, LogOut } from "lucide-react";
@@ -7,8 +8,23 @@ import SignOutConfirmDialog from "@/components/shared/SignOutConfirmDialog";
 import ThemeToggle from "@/components/shared/ThemeToggle";
 
 const AgencyTopBar = () => {
-  const { user } = useAuth();
+  const { user, agencyId } = useAuth();
   const [signOutOpen, setSignOutOpen] = useState(false);
+  const [agencyName, setAgencyName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!agencyId) return;
+    supabase
+      .from("agencies")
+      .select("name")
+      .eq("id", agencyId)
+      .single()
+      .then(({ data }) => {
+        if (data?.name) setAgencyName(data.name);
+      });
+  }, [agencyId]);
+
+  const displayLabel = agencyName || user?.email?.split("@")[0] || "Agency";
 
   return (
     <>
@@ -22,9 +38,9 @@ const AgencyTopBar = () => {
           </Link>
           <div className="flex items-center gap-2 pl-2 border-l border-border">
             <div className="w-8 h-8 rounded-full gradient-blue flex items-center justify-center">
-              <span className="text-primary-foreground text-xs font-semibold">{user?.email?.[0]?.toUpperCase() || "A"}</span>
+              <span className="text-primary-foreground text-xs font-semibold">{displayLabel[0]?.toUpperCase() || "A"}</span>
             </div>
-            <span className="text-sm font-medium text-foreground hidden md:block max-w-[140px] truncate">{user?.email}</span>
+            <span className="text-sm font-medium text-foreground hidden md:block max-w-[140px] truncate">{displayLabel}</span>
             <button onClick={() => setSignOutOpen(true)} className="p-2 rounded-lg hover:bg-secondary transition-colors" title="Sign Out">
               <LogOut className="w-4 h-4 text-muted-foreground" />
             </button>

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Bell, Search, LogOut, ArrowLeft } from "lucide-react";
@@ -10,6 +11,21 @@ import ThemeToggle from "@/components/shared/ThemeToggle";
 const AdminTopBar = () => {
   const { user } = useAuth();
   const [signOutOpen, setSignOutOpen] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.display_name) setDisplayName(data.display_name);
+      });
+  }, [user]);
+
+  const displayLabel = displayName || user?.email?.split("@")[0] || "Admin";
 
   return (
     <>
@@ -32,9 +48,9 @@ const AdminTopBar = () => {
           </button>
           <div className="flex items-center gap-2 pl-2 border-l border-border">
             <div className="w-8 h-8 rounded-full gradient-blue flex items-center justify-center">
-              <span className="text-primary-foreground text-xs font-semibold">{user?.email?.[0]?.toUpperCase() || "A"}</span>
+              <span className="text-primary-foreground text-xs font-semibold">{displayLabel[0]?.toUpperCase() || "A"}</span>
             </div>
-            <span className="text-sm font-medium text-foreground hidden md:block max-w-[140px] truncate">{user?.email}</span>
+            <span className="text-sm font-medium text-foreground hidden md:block max-w-[140px] truncate">{displayLabel}</span>
             <button onClick={() => setSignOutOpen(true)} className="p-2 rounded-lg hover:bg-secondary transition-colors" title="Sign Out">
               <LogOut className="w-4 h-4 text-muted-foreground" />
             </button>

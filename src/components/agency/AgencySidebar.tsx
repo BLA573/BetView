@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Building2,
@@ -8,6 +9,8 @@ import {
   Star,
   CalendarCheck,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -23,19 +26,33 @@ import {
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { title: "Dashboard", url: "/agency", icon: LayoutDashboard },
-  { title: "My Listings", url: "/agency/listings", icon: Building2 },
-  { title: "My Leads", url: "/agency/leads", icon: MessageSquare },
-  { title: "Visit Requests", url: "/agency/visits", icon: CalendarCheck },
-  { title: "Request Scan", url: "/agency/scan-request", icon: ScanLine },
-  { title: "Featured Listings", url: "/agency/featured", icon: Star },
-  { title: "My Plan", url: "/agency/plan", icon: CreditCard },
-  { title: "Agency Profile", url: "/agency/profile", icon: UserCircle },
+  { title: "Dashboard",        url: "/agency",              icon: LayoutDashboard },
+  { title: "My Listings",      url: "/agency/listings",     icon: Building2 },
+  { title: "My Leads",         url: "/agency/leads",        icon: MessageSquare },
+  { title: "Visit Requests",   url: "/agency/visits",       icon: CalendarCheck },
+  { title: "Request Scan",     url: "/agency/scan-request", icon: ScanLine },
+  { title: "Featured Listings",url: "/agency/featured",     icon: Star },
+  { title: "My Plan",          url: "/agency/plan",         icon: CreditCard },
+  { title: "Agency Profile",   url: "/agency/profile",      icon: UserCircle },
 ];
 
 const AgencySidebar = () => {
   const { state } = useSidebar();
+  const { agencyId } = useAuth();
   const collapsed = state === "collapsed";
+  const [agencyName, setAgencyName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!agencyId) return;
+    supabase
+      .from("agencies")
+      .select("name")
+      .eq("id", agencyId)
+      .single()
+      .then(({ data }) => {
+        if (data?.name) setAgencyName(data.name);
+      });
+  }, [agencyId]);
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
@@ -45,8 +62,11 @@ const AgencySidebar = () => {
             <span className="text-primary-foreground font-display font-bold text-sm">B</span>
           </div>
           {!collapsed && (
-            <span className="font-display font-semibold text-lg text-sidebar-foreground tracking-tight">
-              Agency Portal
+            <span
+              className="font-display font-semibold text-lg text-sidebar-foreground tracking-tight truncate max-w-[140px]"
+              title={agencyName || "Agency Portal"}
+            >
+              {agencyName || "Agency Portal"}
             </span>
           )}
         </div>

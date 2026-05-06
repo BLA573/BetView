@@ -79,13 +79,12 @@ const AgencyPlan = () => {
                   </p>
                 </div>
                 <div>
-                  <a
-                    // href="mailto:info@betview.et?subject=Plan%20Upgrade%20Request"
-                    href={`/pricing`}
+                  <Link
+                    to="/pricing"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl gradient-blue text-white shadow-blue hover:opacity-90 transition-all font-semibold"
                   >
-                    <Link to="/pricing" className="w-4 h-4" /> Request Upgrade
-                  </a>
+                    Request Upgrade
+                  </Link>
                 </div>
               </div>
             </div>
@@ -107,8 +106,8 @@ const AgencyPlan = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   If you're reaching your limit, reach out to our team to upgrade your plan. BetView team will handle all scans and listings for you.
                 </p>
-                <a href="tel:+251123456789" className="text-primary text-sm font-semibold hover:underline">
-                  Call Support
+                <a href="mailto:info@betview.et" className="text-primary text-sm font-semibold hover:underline">
+                  Contact Support
                 </a>
               </div>
             </div>

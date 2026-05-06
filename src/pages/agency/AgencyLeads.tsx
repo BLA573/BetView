@@ -16,12 +16,15 @@ interface Lead {
 }
 
 const AgencyLeads = () => {
-  const { agencyId } = useAuth();
+  const { agencyId, loading: authLoading } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!agencyId) return;
+    if (authLoading || !agencyId) {
+      if (!authLoading) setLoading(false);
+      return;
+    }
     supabase
       .from("inquiries")
       .select("id, name, email, phone, message, is_priority, created_at, properties!inner(title, agency_id)")
@@ -31,7 +34,7 @@ const AgencyLeads = () => {
         setLeads((data as unknown as Lead[]) || []);
         setLoading(false);
       });
-  }, [agencyId]);
+  }, [agencyId, authLoading]);
 
   return (
     <AgencyLayout>

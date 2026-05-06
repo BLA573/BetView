@@ -90,8 +90,12 @@ const Premium = () => {
             BetView <span className="text-accent font-light">ቤት View</span>
           </span>
         </Link>
-        <Link to="/profile" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-          <ArrowLeft className="w-4 h-4" /> Back to Profile
+        <Link
+          to={isAdmin ? "/admin" : isAgency ? "/agency" : "/profile"}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          {isAdmin ? "Back to Admin" : isAgency ? "Back to Dashboard" : "Back to Profile"}
         </Link>
       </nav>
 

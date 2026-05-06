@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { CalendarCheck } from "lucide-react";
+import { sendVisitNotification } from "@/lib/sendVisitNotification";
 
 interface Props {
   propertyId: string;
@@ -42,7 +43,7 @@ const BookVisitModal = ({ propertyId, propertyTitle, open, onClose }: Props) => 
       return;
     }
     setSubmitting(true);
-    const { error } = await supabase.from("visit_requests").insert({
+    const { error, data } = await supabase.from("visit_requests").insert({
       user_id: user.id,
       property_id: propertyId,
       name: form.name.trim(),
@@ -52,11 +53,23 @@ const BookVisitModal = ({ propertyId, propertyTitle, open, onClose }: Props) => 
       preferred_time: form.preferredTime || null,
       message: form.message.trim() || null,
       status: "pending",
-    });
+    }).select();
     if (error) {
       toast({ title: "Error submitting request", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Visit request submitted!", description: "The agency will contact you to confirm." });
+      // Fire-and-forget — email failure must not affect the user experience
+      void sendVisitNotification({
+        propertyId,
+        propertyTitle,
+        visitorName:     form.name.trim(),
+        visitorEmail:    form.email.trim(),
+        visitorPhone:    form.phone.trim(),
+        preferredDate:   form.preferredDate || null,
+        preferredTime:   form.preferredTime || null,
+        message:         form.message.trim() || null,
+        visitRequestId:  data?.[0]?.id ?? "",
+      });
       onClose();
     }
     setSubmitting(false);

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Flag, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { Loader2, Flag, CheckCircle, XCircle, AlertTriangle, ExternalLink } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 interface Report {
   id: string;
@@ -14,6 +15,9 @@ interface Report {
   status: string;
   admin_notes: string | null;
   created_at: string;
+  // Resolved display names
+  target_label?: string;
+  reporter_label?: string;
 }
 
 const AdminReports = () => {
@@ -23,11 +27,46 @@ const AdminReports = () => {
 
   const fetchReports = async () => {
     setLoading(true);
-    const { data } = await supabase
+
+    const { data: rawReports } = await supabase
       .from("reports")
       .select("id, reporter_id, target_type, target_id, reason, status, admin_notes, created_at")
       .order("created_at", { ascending: false });
-    setReports((data as Report[]) || []);
+
+    if (!rawReports || rawReports.length === 0) {
+      setReports([]);
+      setLoading(false);
+      return;
+    }
+
+    // Collect IDs by type so we can batch-fetch labels
+    const propertyIds = rawReports.filter(r => r.target_type === "property").map(r => r.target_id);
+    const userIds     = rawReports.filter(r => r.target_type === "user").map(r => r.target_id);
+    const reporterIds = rawReports.map(r => r.reporter_id);
+
+    const [propertiesRes, profilesRes, reporterProfilesRes] = await Promise.all([
+      propertyIds.length > 0
+        ? supabase.from("properties").select("id, title").in("id", propertyIds)
+        : Promise.resolve({ data: [] }),
+      userIds.length > 0
+        ? supabase.from("profiles").select("user_id, display_name").in("user_id", userIds)
+        : Promise.resolve({ data: [] }),
+      supabase.from("profiles").select("user_id, display_name").in("user_id", reporterIds),
+    ]);
+
+    const propertyMap = new Map((propertiesRes.data || []).map((p: any) => [p.id, p.title]));
+    const profileMap  = new Map((profilesRes.data || []).map((p: any) => [p.user_id, p.display_name || "Unknown User"]));
+    const reporterMap = new Map((reporterProfilesRes.data || []).map((p: any) => [p.user_id, p.display_name || "Unknown"]));
+
+    const enriched: Report[] = (rawReports as Report[]).map(r => ({
+      ...r,
+      target_label:   r.target_type === "property"
+        ? (propertyMap.get(r.target_id) ?? `Property ${r.target_id.slice(0, 8)}…`)
+        : (profileMap.get(r.target_id) ?? `User ${r.target_id.slice(0, 8)}…`),
+      reporter_label: reporterMap.get(r.reporter_id) ?? `User ${r.reporter_id.slice(0, 8)}…`,
+    }));
+
+    setReports(enriched);
     setLoading(false);
   };
 
@@ -58,10 +97,26 @@ const AdminReports = () => {
   };
 
   const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-    pending: "default",
-    resolved: "outline",
+    pending:   "default",
+    resolved:  "outline",
     dismissed: "secondary",
-    actioned: "destructive",
+    actioned:  "destructive",
+  };
+
+  const targetLink = (r: Report) => {
+    if (r.target_type === "property") {
+      return (
+        <Link
+          to={`/property/${r.target_id}`}
+          target="_blank"
+          className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
+        >
+          {r.target_label}
+          <ExternalLink className="w-3 h-3" />
+        </Link>
+      );
+    }
+    return <span className="font-medium text-foreground">{r.target_label}</span>;
   };
 
   return (
@@ -85,10 +140,13 @@ const AdminReports = () => {
           <div className="space-y-3">
             {reports.map((r) => (
               <div key={r.id} className="p-4 rounded-xl border border-border bg-card shadow-card space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    <span className="font-medium text-foreground capitalize">{r.target_type}</span>
+                {/* Header row */}
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground capitalize">
+                      {r.target_type}
+                    </span>
                     <Badge variant={statusVariant[r.status] || "outline"} className="capitalize">
                       {r.status}
                     </Badge>
@@ -97,22 +155,50 @@ const AdminReports = () => {
                     {new Date(r.created_at).toLocaleDateString()}
                   </span>
                 </div>
-                <p className="text-sm text-foreground">{r.reason}</p>
-                <p className="text-xs text-muted-foreground">Target: {r.target_id.slice(0, 8)}… · Reporter: {r.reporter_id.slice(0, 8)}…</p>
+
+                {/* Target + reporter */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Reported: </span>
+                    {targetLink(r)}
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Reported by: </span>
+                    <span className="font-medium text-foreground">{r.reporter_label}</span>
+                  </div>
+                </div>
+
+                {/* Reason */}
+                <p className="text-sm text-foreground bg-secondary/50 px-3 py-2 rounded-lg">
+                  <span className="font-medium text-muted-foreground">Reason: </span>{r.reason}
+                </p>
+
+                {/* Admin notes */}
                 {r.admin_notes && (
-                  <p className="text-xs text-muted-foreground bg-secondary/50 px-3 py-2 rounded-lg">
-                    Admin: {r.admin_notes}
+                  <p className="text-xs text-muted-foreground bg-secondary/30 px-3 py-2 rounded-lg">
+                    Admin note: {r.admin_notes}
                   </p>
                 )}
+
+                {/* Actions */}
                 {r.status === "pending" && (
-                  <div className="flex gap-2 pt-1">
-                    <button onClick={() => updateReport(r.id, "resolved")} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition-colors">
+                  <div className="flex gap-2 pt-1 flex-wrap">
+                    <button
+                      onClick={() => updateReport(r.id, "resolved")}
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition-colors"
+                    >
                       <CheckCircle className="w-3 h-3" /> Resolve
                     </button>
-                    <button onClick={() => updateReport(r.id, "actioned")} className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors">
+                    <button
+                      onClick={() => updateReport(r.id, "actioned")}
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive transition-colors"
+                    >
                       <XCircle className="w-3 h-3" /> Take Action
                     </button>
-                    <button onClick={() => updateReport(r.id, "dismissed")} className="text-xs px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors">
+                    <button
+                      onClick={() => updateReport(r.id, "dismissed")}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors"
+                    >
                       Dismiss
                     </button>
                   </div>

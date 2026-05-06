@@ -1,18 +1,45 @@
-import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { mapDbProperty, type Property } from "@/components/browse/propertyData";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  MapPin, BedDouble, Maximize2, Home, CalendarCheck, Phone, Heart,
-  Share2, ChevronLeft, ChevronRight, Bus, TreePine, Eye, ArrowLeft
+  ArrowLeft,
+  Bath,
+  BedDouble,
+  Building2,
+  CalendarCheck,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Home,
+  LayoutGrid,
+  MapPin,
+  Phone,
+  Pill,
+  Printer,
+  Rotate3d,
+  Ruler,
+  School,
+  Share2,
+  ShieldAlert,
+  ShoppingCart,
+  Train,
+  Video,
+  Maximize2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import ContactAgentModal from "@/components/browse/ContactAgentModal";
-import BookVisitModal from "@/components/browse/BookVisitModal";
+import { sendVisitNotification } from "@/lib/sendVisitNotification";
 import ThemeToggle from "@/components/shared/ThemeToggle";
+
+const HERO_IMAGE_COUNT = 13;
+
+type MediaTab = "tour" | "video" | "floor";
 
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,10 +50,27 @@ const PropertyDetail = () => {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [imgIndex, setImgIndex] = useState(0);
-  const [showTour, setShowTour] = useState(false);
+  const [mediaTab, setMediaTab] = useState<MediaTab>("tour");
   const [isFavorite, setIsFavorite] = useState(false);
-  const [showContact, setShowContact] = useState(false);
-  const [showBooking, setShowBooking] = useState(false);
+  const [mapZoom, setMapZoom] = useState(15);
+  const [measureMode, setMeasureMode] = useState(false);
+  const [similarProperties, setSimilarProperties] = useState<Property[]>([]);
+  const [agency, setAgency] = useState<{
+    name: string;
+    logoUrl: string | null;
+    phone: string | null;
+    address: string | null;
+  } | null>(null);
+  const [visitForm, setVisitForm] = useState({
+    name: "",
+    phone: "",
+    email: user?.email || "",
+    preferredDate: "",
+    preferredTime: "",
+    message: "",
+    consent: false,
+  });
+  const [submittingVisit, setSubmittingVisit] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -37,6 +81,25 @@ const PropertyDetail = () => {
         return;
       }
       setProperty(mapDbProperty(data));
+      if (data.agency_id) {
+        const { data: agencyData } = await supabase
+          .from("agencies")
+          .select("name, logo_url, phone, address")
+          .eq("id", data.agency_id)
+          .single();
+        if (agencyData) {
+          setAgency({
+            name: agencyData.name,
+            logoUrl: agencyData.logo_url ?? null,
+            phone: agencyData.phone ?? null,
+            address: agencyData.address ?? null,
+          });
+        } else {
+          setAgency(null);
+        }
+      } else {
+        setAgency(null);
+      }
       setLoading(false);
     };
     fetch();
@@ -44,13 +107,61 @@ const PropertyDetail = () => {
 
   useEffect(() => {
     if (!user || !isPremium || !id) return;
-    supabase.from("saved_properties").select("id").eq("user_id", user.id).eq("property_id", id).single()
-      .then(({ data }) => { if (data) setIsFavorite(true); });
+    supabase
+      .from("saved_properties")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("property_id", id)
+      .single()
+      .then(({ data }) => {
+        if (data) setIsFavorite(true);
+      });
   }, [user, isPremium, id]);
 
+  useEffect(() => {
+    if (!property) return;
+    const fetchSimilar = async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select(
+          "id, title, description, location, lat, lng, price, base_rent, price_per_sqm, rooms, living_space, property_size, available, type, mode, images, tour_url, surroundings, transport, is_verified, is_featured, created_at",
+        )
+        .neq("id", property.id)
+        .order("created_at", { ascending: false })
+        .limit(8);
+      if (!error && data) {
+        const mapped = data.map(mapDbProperty);
+        const filtered = mapped.filter((item) => item.type === property.type || item.city === property.city);
+        setSimilarProperties(filtered.slice(0, 4));
+      }
+    };
+    fetchSimilar();
+  }, [property]);
+
+  const heroImages = useMemo(() => {
+    const base = property?.images?.length ? property.images : ["/placeholder.svg"];
+    return Array.from({ length: HERO_IMAGE_COUNT }, (_, i) => base[i % base.length]);
+  }, [property?.images]);
+
+  const safeTourUrl = (() => {
+    if (!property?.tourUrl) return null;
+    try {
+      const parsed = new URL(property.tourUrl);
+      return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.toString() : null;
+    } catch {
+      return null;
+    }
+  })();
+
   const toggleFavorite = async () => {
-    if (!user) { toast({ title: "Sign in to save properties", variant: "destructive" }); return; }
-    if (!isPremium) { toast({ title: "Premium required", description: "Upgrade to save properties.", variant: "destructive" }); return; }
+    if (!user) {
+      toast({ title: "Sign in to save properties", variant: "destructive" });
+      return;
+    }
+    if (!isPremium) {
+      toast({ title: "Premium required", description: "Upgrade to save properties.", variant: "destructive" });
+      return;
+    }
     if (!property) return;
     if (isFavorite) {
       await supabase.from("saved_properties").delete().eq("user_id", user.id).eq("property_id", property.id);
@@ -66,13 +177,68 @@ const PropertyDetail = () => {
     toast({ title: "Link copied!" });
   };
 
-  const safeTourUrl = (() => {
-    if (!property?.tourUrl) return null;
-    try {
-      const parsed = new URL(property.tourUrl);
-      return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed.toString() : null;
-    } catch { return null; }
-  })();
+  const handleCardClick = useCallback(
+    (p: Property) => {
+      navigate(`/property/${p.id}`);
+    },
+    [navigate],
+  );
+
+  const setVisitField = (key: keyof typeof visitForm, value: string | boolean) => {
+    setVisitForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!user) {
+      toast({ title: "Please sign in first", variant: "destructive" });
+      return;
+    }
+    if (!visitForm.consent) {
+      toast({ title: "Please consent to contact", variant: "destructive" });
+      return;
+    }
+    if (!property) return;
+    setSubmittingVisit(true);
+    const { error, data: insertedData } = await supabase.from("visit_requests").insert({
+      user_id: user.id,
+      property_id: property.id,
+      name: visitForm.name.trim(),
+      phone: visitForm.phone.trim(),
+      email: visitForm.email.trim(),
+      preferred_date: visitForm.preferredDate || null,
+      preferred_time: visitForm.preferredTime || null,
+      message: visitForm.message.trim() || null,
+      status: "pending",
+    }).select();
+    if (error) {
+      toast({ title: "Error submitting request", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Visit request submitted!", description: "The agency will contact you to confirm." });
+      // Fire-and-forget — email failure must not affect the user experience
+      void sendVisitNotification({
+        propertyId:      property.id,
+        propertyTitle:   property.title,
+        visitorName:     visitForm.name.trim(),
+        visitorEmail:    visitForm.email.trim(),
+        visitorPhone:    visitForm.phone.trim(),
+        preferredDate:   visitForm.preferredDate || null,
+        preferredTime:   visitForm.preferredTime || null,
+        message:         visitForm.message.trim() || null,
+        visitRequestId:  insertedData?.[0]?.id ?? "",
+      });
+      setVisitForm({
+        name: "",
+        phone: "",
+        email: user.email || "",
+        preferredDate: "",
+        preferredTime: "",
+        message: "",
+        consent: false,
+      });
+    }
+    setSubmittingVisit(false);
+  };
 
   if (loading) {
     return (
@@ -80,8 +246,8 @@ const PropertyDetail = () => {
         <nav className="flex items-center gap-4 px-6 md:px-16 py-4 border-b border-border">
           <Skeleton className="h-8 w-28" />
         </nav>
-        <div className="max-w-5xl mx-auto px-6 py-10 space-y-6">
-          <Skeleton className="h-72 w-full rounded-2xl" />
+        <div className="max-w-6xl mx-auto px-6 py-10 space-y-6">
+          <Skeleton className="h-80 w-full rounded-2xl" />
           <Skeleton className="h-10 w-2/3" />
           <Skeleton className="h-40 w-full" />
         </div>
@@ -93,16 +259,36 @@ const PropertyDetail = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground text-lg">Property not found.</p>
-        <Link to="/browse" className="text-primary hover:underline">Back to Browse</Link>
+        <Link to="/browse" className="text-primary hover:underline">
+          Back to Browse
+        </Link>
       </div>
     );
   }
 
   const p = property;
+  const mapSrc = `https://www.google.com/maps?q=${p.lat},${p.lng}&z=${mapZoom}&output=embed`;
+
+  const specs = [
+    { label: "Availability", value: p.available || "Sofort" },
+    { label: "Property Type", value: p.type || "Apartment" },
+    { label: "Rooms", value: `${p.rooms}` },
+    { label: "Bathrooms", value: "1" },
+    { label: "Floor", value: "1 of 3" },
+    { label: "Living Area", value: p.livingSpace || "64 m²" },
+    { label: "Year Built", value: "2025" },
+  ];
+
+  const amenities = [
+    { label: "Public Transport", value: "4 min (Steg VS station)", icon: <Train className="w-4 h-4" /> },
+    { label: "Supermarket", value: "4 min (Migros)", icon: <ShoppingCart className="w-4 h-4" /> },
+    { label: "Pharmacy", value: "6 min (Apotheke Oggier)", icon: <Pill className="w-4 h-4" /> },
+    { label: "School", value: "2 min (Primarschule Steg)", icon: <School className="w-4 h-4" /> },
+    { label: "Train Station", value: "16 min (Gampel-Steg)", icon: <Train className="w-4 h-4" /> },
+  ];
 
   return (
     <div className="min-h-screen bg-background page-transition">
-      {/* Nav */}
       <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-16 py-4 bg-card/80 backdrop-blur-lg border-b border-border">
         <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg gradient-blue flex items-center justify-center shadow-blue">
@@ -114,192 +300,546 @@ const PropertyDetail = () => {
         </Link>
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-8 py-8 space-y-8">
-        {/* Gallery */}
-        <div className="relative rounded-2xl overflow-hidden h-64 md:h-96 bg-muted shadow-card">
-          <img src={p.images[imgIndex]} alt={p.title} className="w-full h-full object-cover" />
-          {p.images.length > 1 && (
-            <>
-              <button onClick={() => setImgIndex((i) => (i - 1 + p.images.length) % p.images.length)} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background transition shadow">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-10">
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8 space-y-4 lg:sticky lg:top-24">
+            <div className="flex flex-wrap items-center gap-2">
+              <MediaTabButton
+                active={mediaTab === "tour"}
+                onClick={() => setMediaTab("tour")}
+                icon={<Rotate3d className="w-4 h-4" />}
+                label="360° Tour"
+              />
+              <MediaTabButton
+                active={mediaTab === "video"}
+                onClick={() => setMediaTab("video")}
+                icon={<Video className="w-4 h-4" />}
+                label="Video Tour"
+              />
+              <MediaTabButton
+                active={mediaTab === "floor"}
+                onClick={() => setMediaTab("floor")}
+                icon={<LayoutGrid className="w-4 h-4" />}
+                label="Floor Plans"
+              />
+            </div>
+
+            <div
+              className="relative rounded-2xl overflow-hidden h-72 md:h-[420px] bg-muted shadow-card focus:outline-none focus:ring-2 focus:ring-ring"
+              tabIndex={0}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowLeft") {
+                  setImgIndex((i) => (i - 1 + heroImages.length) % heroImages.length);
+                }
+                if (event.key === "ArrowRight") {
+                  setImgIndex((i) => (i + 1) % heroImages.length);
+                }
+              }}
+              aria-label="Property image gallery"
+            >
+              <img src={heroImages[imgIndex]} alt={p.title} className="w-full h-full object-cover" />
+
+              <button
+                onClick={() => setImgIndex((i) => (i - 1 + heroImages.length) % heroImages.length)}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background transition shadow"
+                aria-label="Previous image"
+              >
                 <ChevronLeft className="w-5 h-5 text-foreground" />
               </button>
-              <button onClick={() => setImgIndex((i) => (i + 1) % p.images.length)} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background transition shadow">
+              <button
+                onClick={() => setImgIndex((i) => (i + 1) % heroImages.length)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background transition shadow"
+                aria-label="Next image"
+              >
                 <ChevronRight className="w-5 h-5 text-foreground" />
               </button>
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {p.images.map((_, i) => (
-                  <button key={i} onClick={() => setImgIndex(i)} className={`w-2.5 h-2.5 rounded-full transition-all ${i === imgIndex ? "bg-white scale-125" : "bg-white/50"}`} />
+              <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-background/80 text-xs font-semibold text-foreground">
+                {imgIndex + 1}/{heroImages.length}
+              </div>
+              <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                <button
+                  onClick={toggleFavorite}
+                  className={`w-10 h-10 rounded-full backdrop-blur flex items-center justify-center transition ${
+                    isFavorite ? "bg-destructive/15 text-destructive" : "bg-background/80 text-foreground hover:bg-background"
+                  }`}
+                  aria-label={isFavorite ? "Remove from favorites" : "Save property"}
+                >
+                  <Heart className={`w-5 h-5 ${isFavorite ? "fill-destructive" : ""}`} />
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="w-10 h-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background transition"
+                  aria-label="Share property"
+                >
+                  <Share2 className="w-5 h-5 text-foreground" />
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="w-10 h-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-background transition"
+                  aria-label="Print listing"
+                >
+                  <Printer className="w-5 h-5 text-foreground" />
+                </button>
+              </div>
+              <div className="absolute top-4 left-4 flex gap-2">
+                <Badge className="bg-primary text-white">{p.mode}</Badge>
+                {p.is_featured && <Badge className="bg-yellow-500 text-yellow-950 border-none">Early Access</Badge>}
+                {p.is_verified && <Badge className="bg-emerald-500 text-white border-none">Verified</Badge>}
+              </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {heroImages.map((img, i) => (
+                <button
+                  key={`${img}-${i}`}
+                  onClick={() => setImgIndex(i)}
+                  className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition ${
+                    i === imgIndex ? "border-primary" : "border-transparent opacity-70"
+                  }`}
+                  aria-label={`Show image ${i + 1}`}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card shadow-card">
+              {mediaTab === "tour" && safeTourUrl ? (
+                <div className="aspect-video">
+                  <iframe
+                    src={safeTourUrl}
+                    title="360° Virtual Tour"
+                    width="100%"
+                    height="100%"
+                    allowFullScreen
+                    allow="autoplay; fullscreen; web-share; xr-spatial-tracking"
+                    className="w-full h-full"
+                    style={{ border: 0 }}
+                  />
+                </div>
+              ) : mediaTab === "tour" ? (
+                <div className="p-6 text-sm text-muted-foreground flex items-center gap-2">
+                  <Rotate3d className="w-4 h-4" /> 360° tour coming soon for this listing.
+                </div>
+              ) : mediaTab === "video" ? (
+                <div className="p-6 text-sm text-muted-foreground flex items-center gap-2">
+                  <Video className="w-4 h-4" /> Video tour will be available shortly.
+                </div>
+              ) : (
+                <div className="p-6 text-sm text-muted-foreground flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4" /> Floor plans are being prepared.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="lg:col-span-4 space-y-4">
+            <div className="p-5 rounded-2xl border border-border bg-card shadow-card">
+              <p className="text-xs font-semibold text-muted-foreground uppercase">Quick Facts</p>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <QuickFact icon={<Home className="w-4 h-4" />} label="Type" value={p.type} />
+                <QuickFact icon={<BedDouble className="w-4 h-4" />} label="Rooms" value={`${p.rooms}`} />
+                <QuickFact icon={<Bath className="w-4 h-4" />} label="Baths" value="1" />
+                <QuickFact icon={<Maximize2 className="w-4 h-4" />} label="Living" value={p.livingSpace} />
+              </div>
+              <div className="mt-4 flex items-center justify-between rounded-xl bg-secondary px-4 py-3">
+                <span className="text-sm text-muted-foreground">Price</span>
+                <span className="font-display font-bold text-lg text-foreground">{p.price}</span>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-border bg-card shadow-card">
+              <h3 className="font-display font-semibold text-foreground mb-3">Nearby Amenities</h3>
+              <div className="space-y-3">
+                {amenities.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="text-primary">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </div>
+                    <span className="font-semibold text-foreground">{item.value}</span>
+                  </div>
                 ))}
               </div>
-            </>
-          )}
-          <div className="absolute top-4 left-4 flex gap-2">
-            <Badge className="bg-primary text-white">{p.mode}</Badge>
-            {p.is_featured && <Badge className="bg-yellow-500 text-yellow-950 border-none">Early Access</Badge>}
-            {p.is_verified && <Badge className="bg-emerald-500 text-white border-none">Verified</Badge>}
-          </div>
-        </div>
+            </div>
 
-        {/* Thumbnails */}
-        {p.images.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {p.images.map((img, i) => (
-              <button key={i} onClick={() => setImgIndex(i)} className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition ${i === imgIndex ? "border-primary" : "border-transparent opacity-60"}`}>
-                <img src={img} alt="" className="w-full h-full object-cover" />
-              </button>
-            ))}
+            <div className="p-5 rounded-2xl border border-border bg-card shadow-card">
+              <h3 className="font-display font-semibold text-foreground mb-2">Price Summary</h3>
+              <p className="font-display text-3xl font-bold text-primary">{p.price}</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <PriceLine label="Price / m²" value={p.pricePerSqm || "N/A"} />
+                <PriceLine label="Base Rent" value={p.baseRent || "Included"} />
+                <PriceLine label="Property Size" value={p.propertySize || "N/A"} />
+                <PriceLine label="Availability" value={p.available || "Sofort"} />
+              </div>
+            </div>
           </div>
-        )}
+        </section>
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <section className="sticky top-20 z-40 bg-background/90 backdrop-blur border border-border rounded-2xl shadow-card">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 px-5 py-4">
+            <QuickFact icon={<Home className="w-4 h-4" />} label="Type" value={p.type} />
+            <QuickFact icon={<BedDouble className="w-4 h-4" />} label="Rooms" value={`${p.rooms}`} />
+            <QuickFact icon={<Bath className="w-4 h-4" />} label="Baths" value="1" />
+            <QuickFact icon={<Maximize2 className="w-4 h-4" />} label="Living" value={p.livingSpace} />
+            <QuickFact icon={<CalendarCheck className="w-4 h-4" />} label="Available" value={p.available} />
+            <QuickFact icon={<Ruler className="w-4 h-4" />} label="Price" value={p.price} />
+          </div>
+        </section>
+
+        <section className="space-y-4">
           <div>
             <h1 className="font-display font-bold text-2xl md:text-4xl text-foreground">{p.title}</h1>
-            <div className="flex items-center gap-1.5 text-muted-foreground mt-2">
-              <MapPin className="w-4 h-4" /><span>{p.location}</span>
+            <div className="flex items-center gap-2 text-muted-foreground mt-2">
+              <MapPin className="w-4 h-4" />
+              <span>{p.location}</span>
             </div>
-            <p className="font-display font-bold text-2xl text-primary mt-3">{p.price}</p>
           </div>
-          <div className="flex gap-3 flex-wrap">
-            <button onClick={toggleFavorite} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all ${isFavorite ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-border bg-card text-foreground hover:bg-secondary"}`}>
-              <Heart className={`w-4 h-4 ${isFavorite ? "fill-destructive" : ""}`} />
-              {isFavorite ? "Saved" : "Save"}
-            </button>
-            <button onClick={handleShare} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-border bg-card text-foreground hover:bg-secondary transition-all">
-              <Share2 className="w-4 h-4" /> Share
-            </button>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button onClick={() => setShowContact(true)} className="flex items-center justify-center gap-2 py-4 rounded-xl border border-border bg-card text-foreground font-semibold hover:bg-secondary transition-all">
-            <Phone className="w-5 h-5 text-primary" /> Contact Agent
-          </button>
-          <button onClick={() => setShowBooking(true)} className="flex items-center justify-center gap-2 py-4 rounded-xl gradient-blue text-white font-semibold shadow-blue hover:opacity-90 transition-all">
-            <CalendarCheck className="w-5 h-5" /> Book a Visit
-          </button>
-        </div>
-
-        {/* Specs */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
-            { label: "Type", value: p.type, icon: <Home className="w-4 h-4 text-primary" /> },
-            { label: "Rooms", value: `${p.rooms} rooms`, icon: <BedDouble className="w-4 h-4 text-primary" /> },
-            { label: "Living Area", value: p.livingSpace, icon: <Maximize2 className="w-4 h-4 text-primary" /> },
-            { label: "Available", value: p.available, icon: <CalendarCheck className="w-4 h-4 text-primary" /> },
-          ].map((item) => (
-            <div key={item.label} className="p-4 rounded-xl bg-secondary flex items-start gap-3">
-              <div className="mt-0.5">{item.icon}</div>
-              <div>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-                <p className="font-semibold text-foreground text-sm mt-0.5">{item.value}</p>
+          <div className="max-w-md rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+            <div className="flex items-center">
+              <div className="w-20 h-20 flex items-center justify-center border-r border-border bg-secondary">
+                {agency?.logoUrl ? (
+                  <img src={agency.logoUrl} alt={agency.name} className="w-12 h-12 rounded-full object-cover" />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center font-display text-sm font-semibold text-foreground">
+                    {getAgencyInitials(agency?.name || "Agency")}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 px-4 py-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Provider</p>
+                <p className="font-display font-semibold text-foreground">{agency?.name || "Agency"}</p>
               </div>
             </div>
-          ))}
-        </div>
-
-        {/* Price details */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <InfoBlock label="Price" value={p.price} />
-          <InfoBlock label="Price / m²" value={p.pricePerSqm || "N/A"} />
-          <InfoBlock label="Property Size" value={p.propertySize} />
-          {p.baseRent && <InfoBlock label="Base Rent" value={p.baseRent} />}
-        </div>
-
-        {/* Description */}
-        {p.description && (
-          <div className="p-6 rounded-xl border border-border bg-card">
-            <h2 className="font-display font-bold text-lg text-foreground mb-3">Description</h2>
-            <p className="text-muted-foreground leading-relaxed">{p.description}</p>
           </div>
-        )}
+        </section>
 
-        {/* Virtual Tour */}
-        {safeTourUrl ? (
-          <div>
-            <button onClick={() => setShowTour((v) => !v)} className="w-full py-4 rounded-xl gradient-blue text-primary-foreground font-semibold shadow-blue hover:opacity-90 transition-all flex items-center justify-center gap-2 text-base">
-              <Eye className="w-5 h-5" />
-              {showTour ? "Hide 360° Virtual Tour" : "Take 360° Virtual Tour"}
-            </button>
-            {showTour && (
-              <div className="mt-4 rounded-xl overflow-hidden border border-border aspect-video">
-                <iframe src={safeTourUrl} title="360° Virtual Tour" width="100%" height="100%" allowFullScreen allow="autoplay; fullscreen; web-share; xr-spatial-tracking" className="w-full h-full" style={{ border: 0 }} />
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-7 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display font-bold text-lg text-foreground flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" /> Location Map
+              </h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setMapZoom((z) => Math.min(19, z + 1))}
+                  className="px-3 py-1.5 rounded-lg border border-border text-sm font-semibold hover:bg-secondary"
+                  aria-label="Zoom in"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => setMapZoom((z) => Math.max(12, z - 1))}
+                  className="px-3 py-1.5 rounded-lg border border-border text-sm font-semibold hover:bg-secondary"
+                  aria-label="Zoom out"
+                >
+                  -
+                </button>
               </div>
-            )}
-          </div>
-        ) : (
-          <button disabled className="w-full py-4 rounded-xl gradient-blue text-primary-foreground font-semibold flex items-center justify-center gap-2 text-base opacity-50 cursor-not-allowed">
-            <Eye className="w-5 h-5" /> 360° Tour Coming Soon
-          </button>
-        )}
+            </div>
 
-        {/* Area info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {p.surroundings && (
-            <div className="p-6 rounded-xl border border-border bg-card">
-              <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
-                <TreePine className="w-4 h-4 text-accent" /> Surrounding Area
-              </h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">{p.surroundings}</p>
+            <div className="rounded-2xl overflow-hidden border border-border h-72">
+              <iframe
+                title="Property Location"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                src={mapSrc}
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-border bg-card">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Ruler className="w-4 h-4" />
+                <span>Distance measurement</span>
+              </div>
+              <button
+                onClick={() => setMeasureMode((v) => !v)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition ${
+                  measureMode ? "border-primary bg-primary/10 text-primary" : "border-border text-foreground hover:bg-secondary"
+                }`}
+                aria-pressed={measureMode}
+              >
+                {measureMode ? "On" : "Off"}
+              </button>
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 space-y-4">
+            <div className="p-5 rounded-2xl border border-border bg-card shadow-card">
+              <h3 className="font-display font-semibold text-foreground mb-2">Price</h3>
+              <p className="font-display text-3xl font-bold text-primary">{p.price}</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <PriceLine label="Price / m²" value={p.pricePerSqm || "N/A"} />
+                <PriceLine label="Base Rent" value={p.baseRent || "Included"} />
+                <PriceLine label="Property Size" value={p.propertySize || "N/A"} />
+                <PriceLine label="Availability" value={p.available || "Sofort"} />
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl border border-border bg-card shadow-card">
+              <h3 className="font-display font-semibold text-foreground mb-2">Main Specifications</h3>
+              <div className="grid grid-cols-1 gap-3">
+                {specs.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    <span className="font-semibold text-foreground">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="p-6 rounded-2xl border border-border bg-card shadow-card space-y-4">
+          <h2 className="font-display font-bold text-lg text-foreground">Detailed Description</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            {p.description ||
+              "Bright, newly built apartment with a calm balcony view, designed for modern living. The open-plan layout connects living and dining spaces, while large windows bring in abundant natural light throughout the day."}
+          </p>
+          <p className="text-muted-foreground leading-relaxed">
+            The kitchen features sleek cabinetry, premium appliances, and generous storage. The bathroom includes modern fixtures, a walk-in shower, and easy-clean surfaces.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <HighlightChip text="Room-by-room breakdown" />
+            <HighlightChip text="Kitchen features" />
+            <HighlightChip text="Bathroom details" />
+            <HighlightChip text="Flooring information" />
+            <HighlightChip text="Natural lighting" />
+            <HighlightChip text="Storage & cellar" />
+            <HighlightChip text="Parking options" />
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-5">
+            <div className="p-6 rounded-2xl border border-border bg-card shadow-card space-y-4">
+              <h2 className="font-display font-bold text-lg text-foreground">Provider Information</h2>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <InfoLine icon={<Building2 className="w-4 h-4" />} label="Agency" value={agency?.name || "Agency"} />
+                <InfoLine icon={<MapPin className="w-4 h-4" />} label="Address" value={agency?.address || "Nordstrasse 2, 3900 Brig"} />
+                <InfoLine icon={<Phone className="w-4 h-4" />} label="Contact" value="Mika Laukel" />
+                <InfoLine icon={<Phone className="w-4 h-4" />} label="Phone" value={agency?.phone || "+41 79 367 4156"} />
+                <InfoLine icon={<Phone className="w-4 h-4" />} label="Mobile" value="+27 924 6084" />
+                <InfoLine icon={<Home className="w-4 h-4" />} label="Listing ID" value="4003053779" />
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-7">
+            <div className="p-6 rounded-2xl border border-border bg-card shadow-card space-y-4 lg:sticky lg:top-28">
+              <h2 className="font-display font-bold text-lg text-foreground">Contact Form</h2>
+              {!user ? (
+                <p className="text-muted-foreground text-sm">
+                  Please <a href="/auth" className="text-primary font-medium hover:underline">sign in</a> to book a visit.
+                </p>
+              ) : (
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  <div className="space-y-2">
+                    <Label>Full Name *</Label>
+                    <Input value={visitForm.name} onChange={(e) => setVisitField("name", e.target.value)} required />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Phone *</Label>
+                      <Input value={visitForm.phone} onChange={(e) => setVisitField("phone", e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email *</Label>
+                      <Input
+                        type="email"
+                        value={visitForm.email}
+                        onChange={(e) => setVisitField("email", e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Preferred Date</Label>
+                      <Input
+                        type="date"
+                        value={visitForm.preferredDate}
+                        onChange={(e) => setVisitField("preferredDate", e.target.value)}
+                        min={new Date().toISOString().split("T")[0]}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Preferred Time</Label>
+                      <Input
+                        type="time"
+                        value={visitForm.preferredTime}
+                        onChange={(e) => setVisitField("preferredTime", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Notes / Message</Label>
+                    <Textarea
+                      value={visitForm.message}
+                      onChange={(e) => setVisitField("message", e.target.value)}
+                      rows={3}
+                      placeholder="Any specific questions or requirements?"
+                    />
+                  </div>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visitForm.consent}
+                      onChange={(e) => setVisitField("consent", e.target.checked)}
+                      className="mt-1"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      I consent to being contacted by the agency regarding this visit request. *
+                    </span>
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={submittingVisit}
+                    className="w-full py-3 rounded-xl gradient-blue text-primary-foreground font-semibold shadow-blue hover:opacity-90 transition-all disabled:opacity-50"
+                  >
+                    {submittingVisit ? "Submitting…" : "Submit Visit Request"}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="font-display font-bold text-lg text-foreground">Similar Properties</h2>
+          {similarProperties.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No similar properties available yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {similarProperties.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleCardClick(item)}
+                  className="group rounded-2xl overflow-hidden border border-border bg-card shadow-card hover:shadow-blue transition text-left"
+                >
+                  <div className="h-40 overflow-hidden">
+                    <img
+                      src={item.images[0]}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <p className="font-semibold text-foreground">{item.title}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{item.location}</p>
+                    <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
+                      <span className="font-semibold text-primary">{item.price}</span>
+                      <span className="flex items-center gap-1">
+                        <BedDouble className="w-4 h-4" />
+                        {item.rooms}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
             </div>
           )}
-          {p.transport && (
-            <div className="p-6 rounded-xl border border-border bg-card">
-              <h3 className="font-display font-semibold text-foreground mb-2 flex items-center gap-2">
-                <Bus className="w-4 h-4 text-accent" /> Transport
-              </h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">{p.transport}</p>
-            </div>
-          )}
-        </div>
+        </section>
 
-        {/* Map */}
-        <div>
-          <h2 className="font-display font-bold text-lg text-foreground mb-3 flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-primary" /> Location
-          </h2>
-          <div className="rounded-2xl overflow-hidden border border-border h-72">
-            <iframe
-              title="Property Location"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              loading="lazy"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${p.lng - 0.01}%2C${p.lat - 0.007}%2C${p.lng + 0.01}%2C${p.lat + 0.007}&layer=mapnik&marker=${p.lat}%2C${p.lng}`}
-            />
+        <section className="p-6 rounded-2xl border border-border bg-card shadow-card">
+          <div className="flex items-center gap-2 text-foreground">
+            <ShieldAlert className="w-5 h-5 text-destructive" />
+            <h2 className="font-display font-bold text-lg">Fraud Protection Alert</h2>
           </div>
-        </div>
-
-        {/* Availability */}
-        <div className="p-6 rounded-xl border border-border bg-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="font-display font-semibold text-foreground">Availability</h3>
-            <p className="text-muted-foreground text-sm mt-1">Available from: <span className="text-foreground font-medium">{p.available}</span></p>
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-muted-foreground">
+            <div className="flex items-start gap-2"><span className="mt-1 w-2 h-2 rounded-full bg-destructive" />Never wire money in advance.</div>
+            <div className="flex items-start gap-2"><span className="mt-1 w-2 h-2 rounded-full bg-destructive" />Be cautious of deals too good to be true.</div>
+            <div className="flex items-start gap-2"><span className="mt-1 w-2 h-2 rounded-full bg-destructive" />Never share personal data or bank details.</div>
+            <div className="flex items-start gap-2"><span className="mt-1 w-2 h-2 rounded-full bg-destructive" />Never sign without viewing the property.</div>
           </div>
-          <button onClick={() => setShowBooking(true)} className="flex items-center gap-2 px-6 py-3 rounded-xl gradient-blue text-white font-semibold shadow-blue hover:opacity-90 transition-all">
-            <CalendarCheck className="w-4 h-4" /> Book a Visit
-          </button>
-        </div>
+        </section>
       </div>
-
-      <ContactAgentModal propertyId={p.id} propertyTitle={p.title} open={showContact} onClose={() => setShowContact(false)} />
-      <BookVisitModal propertyId={p.id} propertyTitle={p.title} open={showBooking} onClose={() => setShowBooking(false)} />
     </div>
   );
 };
 
-const InfoBlock = ({ label, value }: { label: string; value: string }) => (
-  <div className="p-4 rounded-xl bg-secondary">
-    <p className="text-xs text-muted-foreground">{label}</p>
-    <p className="font-display font-semibold text-foreground mt-0.5">{value}</p>
+const MediaTabButton = ({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold border transition ${
+      active ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-secondary"
+    }`}
+  >
+    {icon}
+    <span>{label}</span>
+  </button>
+);
+
+const QuickFact = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
+  <div className="flex items-center gap-2">
+    <div className="text-primary">{icon}</div>
+    <div>
+      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-sm font-semibold text-foreground">{value}</p>
+    </div>
   </div>
 );
+
+const PriceLine = ({ label, value }: { label: string; value: string }) => (
+  <div>
+    <p className="text-xs text-muted-foreground uppercase">{label}</p>
+    <p className="font-semibold text-foreground">{value}</p>
+  </div>
+);
+
+const HighlightChip = ({ text }: { text: string }) => (
+  <div className="flex items-center gap-2 text-sm text-muted-foreground rounded-lg bg-secondary px-3 py-2">
+    <span className="w-2 h-2 rounded-full bg-primary" />
+    <span>{text}</span>
+  </div>
+);
+
+const InfoLine = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) => (
+  <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center gap-2 text-muted-foreground">
+      {icon}
+      <span>{label}</span>
+    </div>
+    <span className="font-semibold text-foreground">{value}</span>
+  </div>
+);
+
+const getAgencyInitials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "AG";
 
 export default PropertyDetail;
