@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import AdminRouteGuard from "@/components/auth/AdminRouteGuard";
 import AgencyRouteGuard from "@/components/auth/AgencyRouteGuard";
 import AuthRequiredGuard from "@/components/auth/AuthRequiredGuard";
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 
 const Index = lazy(() => import("./pages/Index"));
 const Browse = lazy(() => import("./pages/Browse"));
