@@ -115,14 +115,14 @@ const BookingForm = () => {
   const inputStyle = { background: 'hsl(215,55%,16%)', border: '1px solid hsl(215,40%,24%)' };
 
   return (
-    <section id="booking-form" className="py-24" style={{ background: 'hsl(215,66%,10%)' }}>
+    <section id="booking-form" className="py-16 sm:py-24 px-4" style={{ background: 'hsl(215,66%,10%)' }}>
       <div className="container max-w-2xl">
         <div className="text-center mb-12">
           <span className="inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-4"
             style={{ background: 'hsl(214,80%,40%,0.15)', color: 'hsl(var(--blue-glow))' }}>
             Free Demo
           </span>
-          <h2 className="font-display font-bold text-3xl md:text-4xl text-white mb-4">
+          <h2 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-white mb-4">
             Book Your Free Agency Demo
           </h2>
           <p style={{ color: 'hsl(215,30%,60%)' }}>
@@ -130,7 +130,7 @@ const BookingForm = () => {
           </p>
         </div>
 
-        <div className="rounded-2xl p-8 md:p-10" style={{ background: 'hsl(215,55%,13%)', border: '1px solid hsl(215,40%,20%)' }}>
+        <div className="rounded-2xl p-5 sm:p-8 md:p-10" style={{ background: 'hsl(215,55%,13%)', border: '1px solid hsl(215,40%,20%)' }}>
           {submitted ? (
             <div className="text-center py-10">
               <div className="w-16 h-16 rounded-full gradient-blue flex items-center justify-center mx-auto mb-6 shadow-blue">

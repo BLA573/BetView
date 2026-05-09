@@ -70,6 +70,16 @@ const Pricing = () => {
     });
   };
 
+  const handleSelectPremium = () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    navigate("/checkout", {
+      state: { plan: { name: "Premium Buyer", price: "150", period: "per month" } },
+    });
+  };
+
   return (
     <main className="min-h-screen bg-background page-transition">
       {/* Header */}
@@ -251,9 +261,12 @@ const Pricing = () => {
                 </span>
               ))}
             </div>
-            <Link to={user ? "/premium" : "/auth"} className="inline-block px-8 py-3 rounded-xl gradient-blue text-white font-semibold shadow-blue hover:opacity-90 transition-all">
+            <button
+              onClick={handleSelectPremium}
+              className="inline-block px-8 py-3 rounded-xl gradient-blue text-white font-semibold shadow-blue hover:opacity-90 transition-all"
+            >
               {user ? "Upgrade to Premium" : "Sign Up to Get Started"}
-            </Link>
+            </button>
           </div>
         </div>
       </section>

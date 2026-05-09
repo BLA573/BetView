@@ -23,6 +23,7 @@ const Premium = lazy(() => import("./pages/Premium"));
 const SavedProperties = lazy(() => import("./pages/SavedProperties"));
 const PropertyAlerts = lazy(() => import("./pages/PropertyAlerts"));
 const PropertyDetail = lazy(() => import("./pages/property/PropertyDetail"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 
 const AdminOverview = lazy(() => import("./pages/admin/AdminOverview"));
 const AdminListings = lazy(() => import("./pages/admin/AdminListings"));
@@ -74,6 +75,7 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/property/:id" element={<PropertyDetail />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
 
                 {/* Auth Required */}
                 <Route element={<AuthRequiredGuard />}>

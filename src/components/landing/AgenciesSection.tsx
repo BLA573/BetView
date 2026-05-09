@@ -15,16 +15,16 @@ const AgenciesSection = () => {
   };
 
   return (
-    <section id="agencies" className="py-24 bg-white">
-      <div className="container max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+    <section id="agencies" className="py-16 sm:py-24 bg-white dark:bg-background">
+      <div className="container max-w-6xl px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Left: content */}
           <div>
             <span className="inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-6"
               style={{ background: 'hsl(214,80%,40%,0.08)', color: 'hsl(var(--primary))' }}>
               For Real Estate Agencies
             </span>
-            <h2 className="font-display font-bold text-3xl md:text-4xl text-navy mb-6 leading-tight">
+            <h2 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-navy mb-4 sm:mb-6 leading-tight">
               Why Real Estate Agencies Partner With BetView
             </h2>
             <p className="text-muted-foreground text-lg mb-10 leading-relaxed">
@@ -56,15 +56,15 @@ const AgenciesSection = () => {
                 style={{ background: 'hsl(var(--blue-glow))' }} />
 
               <div className="relative z-10">
-                <div className="font-display font-bold text-5xl text-white mb-2">70%</div>
+                <div className="font-display font-bold text-4xl sm:text-5xl text-white mb-2">70%</div>
                 <div style={{ color: 'hsl(var(--blue-glow))' }} className="font-medium mb-6">Fewer Unnecessary Tours</div>
                 <div className="h-px mb-6" style={{ background: 'hsl(215,40%,22%)' }} />
 
-                <div className="font-display font-bold text-5xl text-white mb-2">3×</div>
+                <div className="font-display font-bold text-4xl sm:text-5xl text-white mb-2">3×</div>
                 <div style={{ color: 'hsl(var(--blue-glow))' }} className="font-medium mb-6">Higher Lead Quality</div>
                 <div className="h-px mb-6" style={{ background: 'hsl(215,40%,22%)' }} />
 
-                <div className="font-display font-bold text-5xl text-white mb-2">∞</div>
+                <div className="font-display font-bold text-4xl sm:text-5xl text-white mb-2">∞</div>
                 <div style={{ color: 'hsl(var(--blue-glow))' }} className="font-medium mb-6">Global Reach for Diaspora</div>
 
                 <div className="mt-8 p-4 rounded-xl" style={{ background: 'hsl(215,55%,14%)', border: '1px solid hsl(215,40%,22%)' }}>

@@ -4,10 +4,14 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import SignOutConfirmDialog from "@/components/shared/SignOutConfirmDialog";
 import ThemeToggle from "@/components/shared/ThemeToggle";
+import { Menu, X, LayoutDashboard, Shield, User, LogOut, LogIn } from "lucide-react";
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isAgency } = useAuth();
   const [signOutOpen, setSignOutOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const scrollToForm = () => {
     document.getElementById("booking-form")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -18,7 +22,6 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Background */}
-
       <div className="absolute inset-0">
         <img
           src={heroVr}
@@ -29,8 +32,9 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-navy" style={{ background: 'linear-gradient(to bottom, transparent 60%, hsl(215,66%,10%) 100%)' }} />
       </div>
 
-      {/* Navbar */}
+      {/* ── NAVBAR (original desktop layout, hamburger added for mobile) ── */}
       <nav className="relative z-10 flex items-center justify-between px-6 md:px-16 py-6">
+        {/* Logo — always visible */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg gradient-blue flex items-center justify-center shadow-blue">
             <span className="text-primary-foreground font-display font-bold text-sm">B</span>
@@ -39,6 +43,8 @@ const HeroSection = () => {
             BetView <span className="text-blue-glow font-light">ቤት View</span>
           </span>
         </div>
+
+        {/* Desktop nav — UNCHANGED from original */}
         <div className="hidden md:flex items-center gap-8">
           <a href="#vr-demo" className="text-sm text-white/70 hover:text-white transition-colors">VR Demo</a>
           <Link to="/browse" className="text-sm text-white/70 hover:text-white transition-colors">Browse</Link>
@@ -65,15 +71,104 @@ const HeroSection = () => {
           )}
           <ThemeToggle compact />
         </div>
+
+        {/* Mobile-only: theme toggle + hamburger button */}
+        <div className="flex md:hidden items-center gap-2">
+          <ThemeToggle compact />
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open navigation menu"
+            className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-all"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+        </div>
       </nav>
+
+      {/* ── MOBILE MENU OVERLAY (only renders on mobile) ── */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          {/* Dim backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          {/* Slide-in panel from right */}
+          <div
+            className="absolute right-0 top-0 bottom-0 w-72 flex flex-col"
+            style={{ background: 'hsl(215,66%,8%)', borderLeft: '1px solid hsl(215,40%,18%)' }}
+          >
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'hsl(215,40%,18%)' }}>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg gradient-blue flex items-center justify-center shadow-blue">
+                  <span className="text-white font-bold text-xs">B</span>
+                </div>
+                <span className="font-display font-semibold text-white">BetView</span>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close menu"
+                className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Nav links */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-1">
+              <a href="#vr-demo" onClick={() => setMobileMenuOpen(false)} className="flex items-center w-full px-4 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all min-h-[48px]">VR Demo</a>
+              <Link to="/browse" onClick={() => setMobileMenuOpen(false)} className="flex items-center w-full px-4 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all min-h-[48px]">Browse Properties</Link>
+              <Link to="/pricing" onClick={() => setMobileMenuOpen(false)} className="flex items-center w-full px-4 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all min-h-[48px]">Pricing</Link>
+              <a href="#solution" onClick={() => setMobileMenuOpen(false)} className="flex items-center w-full px-4 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all min-h-[48px]">How It Works</a>
+              <a href="#agencies" onClick={() => setMobileMenuOpen(false)} className="flex items-center w-full px-4 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all min-h-[48px]">For Agencies</a>
+              {isAdmin && (
+                <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all min-h-[48px]">
+                  <Shield className="w-4 h-4 opacity-50" /> Admin Dashboard
+                </Link>
+              )}
+              {isAgency && (
+                <Link to="/agency" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all min-h-[48px]">
+                  <LayoutDashboard className="w-4 h-4 opacity-50" /> Agency Dashboard
+                </Link>
+              )}
+              {user && !isAgency && !isAdmin && (
+                <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-all min-h-[48px]">
+                  <User className="w-4 h-4 opacity-50" /> My Profile
+                </Link>
+              )}
+            </div>
+
+            {/* Panel footer CTA */}
+            <div className="p-4 border-t" style={{ borderColor: 'hsl(215,40%,18%)' }}>
+              {user ? (
+                <button
+                  onClick={() => { setMobileMenuOpen(false); setSignOutOpen(true); }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/20 text-white/80 hover:text-white hover:bg-white/5 transition-all text-sm font-medium"
+                >
+                  <LogOut className="w-4 h-4" /> Sign Out
+                </button>
+              ) : (
+                <Link
+                  to="/auth"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl gradient-blue text-white shadow-blue hover:opacity-90 transition-opacity text-sm font-medium"
+                >
+                  <LogIn className="w-4 h-4" /> Sign In
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <SignOutConfirmDialog open={signOutOpen} onClose={() => setSignOutOpen(false)} />
 
-      {/* Hero Content */}
+      {/* ── HERO CONTENT (original, untouched) ── */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-6 py-20">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass mb-8 animate-fade-up">
           <div className="w-2 h-2 rounded-full bg-blue-glow animate-pulse" />
-          <span className="text-xs text-white/80 font-medium tracking-wide">Ethiopia’s trusted property platform..</span>
+          <span className="text-xs text-white/80 font-medium tracking-wide">Ethiopia's trusted property platform..</span>
         </div>
 
         <h1 className="font-display font-bold text-4xl md:text-6xl lg:text-7xl text-white max-w-4xl leading-tight animate-fade-up animation-delay-200">

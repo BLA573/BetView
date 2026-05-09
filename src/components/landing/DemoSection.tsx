@@ -75,17 +75,17 @@ const DemoSection = () => {
   }, []);
 
   return (
-    <section id="vr-demo" className="py-24 bg-navy" style={{ background: 'hsl(215,66%,10%)' }}>
-      <div className="container max-w-6xl">
-        <div className="text-center mb-14">
+    <section id="vr-demo" className="py-16 sm:py-24" style={{ background: 'hsl(215,66%,10%)' }}>
+      <div className="container max-w-6xl px-4 sm:px-6">
+        <div className="text-center mb-10 sm:mb-14">
           <span className="inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-widest uppercase mb-4"
             style={{ background: 'hsl(214,80%,40%,0.15)', color: 'hsl(var(--blue-glow))' }}>
             Live VR Preview
           </span>
-          <h2 className="font-display font-bold text-3xl md:text-4xl text-white mb-4">
+          <h2 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-white mb-4">
             Step Inside an Addis Ababa Apartment
           </h2>
-          <p className="text-white/60 text-lg max-w-xl mx-auto">
+          <p className="text-white/60 text-base sm:text-lg max-w-xl mx-auto">
             Experience a real Addis Ababa apartment in immersive 3D.
           </p>
         </div>
@@ -97,11 +97,10 @@ const DemoSection = () => {
               src={tourUrl}
               title="360° Virtual Tour"
               width="100%"
-              height="480"
               allowFullScreen
               allow="autoplay; fullscreen; web-share; xr-spatial-tracking"
               className="w-full"
-              style={{ height: '480px', border: 0 }}
+              style={{ height: 'clamp(240px, 40vw, 480px)', border: 0, display: 'block' }}
             />
           ) : (
             <>
@@ -109,7 +108,7 @@ const DemoSection = () => {
                 src={apartment360}
                 alt="360° apartment tour Addis Ababa"
                 className="w-full object-cover"
-                style={{ height: '480px' }}
+                style={{ height: 'clamp(240px, 40vw, 480px)' }}
               />
               {/* Overlay */}
               <div className="absolute inset-0 flex flex-col items-center justify-center"
@@ -140,9 +139,9 @@ const DemoSection = () => {
         </div>
 
         {/* Feature chips */}
-        <div className="flex flex-wrap gap-3 justify-center mt-8">
+        <div className="flex flex-wrap gap-2 sm:gap-3 justify-center mt-6 sm:mt-8">
           {["Full 360° Rotation", "HD Quality", "Room-by-Room Navigation", "Mobile Compatible", "No Headset Required"].map((f) => (
-            <span key={f} className="px-4 py-1.5 rounded-full text-sm font-medium border"
+            <span key={f} className="px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium border"
               style={{ borderColor: 'hsl(214,80%,40%,0.3)', color: 'hsl(var(--blue-glow))', background: 'hsl(214,80%,40%,0.08)' }}>
               {f}
             </span>
