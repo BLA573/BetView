@@ -622,19 +622,7 @@ const PropertyDetail = () => {
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-5">
-            <div className="p-6 rounded-2xl border border-border bg-card shadow-card space-y-4">
-              <h2 className="font-display font-bold text-lg text-foreground">Provider Information</h2>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <InfoLine icon={<Building2 className="w-4 h-4" />} label="Agency" value={agency?.name || "Agency"} />
-                <InfoLine icon={<MapPin className="w-4 h-4" />} label="Address" value={agency?.address || "Nordstrasse 2, 3900 Brig"} />
-                <InfoLine icon={<Phone className="w-4 h-4" />} label="Contact" value="Mika Laukel" />
-                <InfoLine icon={<Phone className="w-4 h-4" />} label="Phone" value={agency?.phone || "+41 79 367 4156"} />
-                <InfoLine icon={<Phone className="w-4 h-4" />} label="Mobile" value="+27 924 6084" />
-                <InfoLine icon={<Home className="w-4 h-4" />} label="Listing ID" value="4003053779" />
-              </div>
-            </div>
-          </div>
+
 
           <div className="lg:col-span-7">
             <div className="p-6 rounded-2xl border border-border bg-card shadow-card space-y-4 lg:sticky lg:top-28">
