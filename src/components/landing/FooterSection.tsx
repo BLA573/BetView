@@ -17,14 +17,11 @@ const FooterSection = () => {
               className="inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-md w-fit"
               aria-label="BetView Home"
             >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg gradient-blue flex items-center justify-center shadow-blue">
-                  <span className="text-white font-display font-bold text-sm">B</span>
-                </div>
-                <span className="font-display font-semibold text-xl text-white tracking-tight">
-                  BetView <span style={{ color: 'hsl(var(--blue-glow))' }} className="font-light">ቤት View</span>
-                </span>
-              </div>
+              <img
+                src="/betview_logo_primary.png"
+                alt="BetView logo"
+                className="h-10 w-auto object-contain"
+              />
             </Link>
             
             <p style={{ color: 'hsl(215,30%,55%)' }} className="leading-relaxed max-w-sm text-sm">

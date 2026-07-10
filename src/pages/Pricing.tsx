@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Check, Building2, Crown, Rocket, Star, ArrowLeft, Smartphone, CreditCard } from "lucide-react";
 import FooterSection from "@/components/landing/FooterSection";
@@ -55,6 +56,7 @@ const PaymentBadges = () => (
 const Pricing = () => {
   const { user, isAgency } = useAuth();
   const navigate = useNavigate();
+  const [isYearly, setIsYearly] = useState(false);
 
   const handleSelectPlan = (tier: typeof agencyTiers[0]) => {
     if (!user) {
@@ -66,7 +68,13 @@ const Pricing = () => {
       return;
     }
     navigate("/checkout", {
-      state: { plan: { name: tier.name, price: tier.price, period: "per month" } },
+      state: {
+        plan: {
+          name: tier.name,
+          price: isYearly ? tier.yearly : tier.price,
+          period: isYearly ? "per year" : "per month",
+        },
+      },
     });
   };
 
@@ -85,9 +93,11 @@ const Pricing = () => {
       {/* Header */}
       <nav className="flex items-center justify-between px-6 md:px-16 py-6 border-b border-border">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gradient-blue flex items-center justify-center shadow-blue">
-            <span className="text-primary-foreground font-display font-bold text-sm">B</span>
-          </div>
+          <img
+            src="/betview_logo_primary.png"
+            alt="BetView Logo"
+            className="h-8 w-auto object-contain"
+          />
           <span className="font-display font-semibold text-xl text-foreground tracking-tight">
             BetView <span className="text-accent font-light">ቤት View</span>
           </span>
@@ -125,17 +135,39 @@ const Pricing = () => {
       <section className="pb-20 px-6">
         <div className="max-w-6xl mx-auto">
           <h2 className="font-display font-bold text-2xl text-foreground text-center mb-3">For Real Estate Agencies</h2>
-          <p className="text-muted-foreground text-center mb-10">All plans include VR listing support and lead management</p>
+          <p className="text-muted-foreground text-center mb-6">All plans include VR listing support and lead management</p>
+
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center gap-4 mb-10">
+            <span className={`text-sm font-medium transition-colors ${!isYearly ? "text-foreground" : "text-muted-foreground"}`}>Monthly</span>
+            <button
+              onClick={() => setIsYearly((v) => !v)}
+              aria-pressed={isYearly}
+              aria-label="Toggle billing period"
+              className={`relative w-14 h-7 rounded-full transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${isYearly ? "bg-primary" : "bg-secondary border border-border"
+                }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform duration-300 ${isYearly ? "translate-x-7" : "translate-x-0"
+                  }`}
+              />
+            </button>
+            <span className={`flex items-center gap-2 text-sm font-medium transition-colors ${isYearly ? "text-foreground" : "text-muted-foreground"}`}>
+              Yearly
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold gradient-blue text-white shadow-blue">
+                Save 15%
+              </span>
+            </span>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {agencyTiers.map((tier) => (
               <div
                 key={tier.name}
-                className={`relative rounded-2xl p-8 border transition-all hover:-translate-y-1 duration-300 ${
-                  tier.popular
+                className={`relative rounded-2xl p-8 border transition-all hover:-translate-y-1 duration-300 ${tier.popular
                     ? "border-primary bg-primary/[0.03] shadow-blue"
                     : "border-border bg-card shadow-card hover:shadow-blue"
-                }`}
+                  }`}
               >
                 {tier.popular && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full gradient-blue text-xs font-semibold text-white shadow-blue">
@@ -153,12 +185,19 @@ const Pricing = () => {
                 </div>
 
                 <div className="mb-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="font-display font-bold text-3xl text-foreground">{tier.price}</span>
-                    <span className="text-muted-foreground text-sm">ETB/mo</span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="font-display font-bold text-3xl text-foreground transition-all">
+                      {isYearly ? tier.yearly : tier.price}
+                    </span>
+                    <span className="text-muted-foreground text-sm">
+                      {isYearly ? "ETB/yr" : "ETB/mo"}
+                    </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    or {tier.yearly} ETB/year <span className="text-primary font-medium">(save 15%)</span>
+                    {isYearly
+                      ? `≈ ${Math.round(Number(tier.yearly.replace(/,/g, "")) / 12).toLocaleString()} ETB/mo`
+                      : `or ${tier.yearly} ETB/year `}
+                    {!isYearly && <span className="text-primary font-medium">(save 15%)</span>}
                   </p>
                 </div>
 
@@ -176,11 +215,10 @@ const Pricing = () => {
 
                 <button
                   onClick={() => handleSelectPlan(tier)}
-                  className={`block w-full py-3 rounded-xl text-center font-semibold text-sm transition-all ${
-                    tier.popular
+                  className={`block w-full py-3 rounded-xl text-center font-semibold text-sm transition-all ${tier.popular
                       ? "gradient-blue text-white shadow-blue hover:opacity-90"
                       : "border border-border text-foreground hover:bg-secondary"
-                  }`}
+                    }`}
                 >
                   {isAgency ? `Subscribe — ${tier.name}` : `Get ${tier.name} Plan`}
                 </button>
@@ -282,7 +320,7 @@ const Pricing = () => {
             <a href="mailto:info@betview.et" className="px-8 py-4 rounded-xl gradient-blue text-white font-semibold shadow-blue hover:opacity-90 transition-all">
               Contact Us — info@betview.et
             </a>
-            <a href="tel:+251900000000" className="px-8 py-4 rounded-xl glass text-white font-medium hover:bg-white/10 transition-all" style={{ border: "1px solid hsl(215,40%,22%)" }}>
+            <a href="tel:+251931503581" className="px-8 py-4 rounded-xl glass text-white font-medium hover:bg-white/10 transition-all" style={{ border: "1px solid hsl(215,40%,22%)" }}>
               Call Us
             </a>
           </div>

@@ -109,9 +109,11 @@ const Profile = () => {
     <main className="min-h-screen bg-background">
       <nav className="sticky top-0 z-50 flex items-center justify-between px-6 md:px-16 py-4 bg-card/80 backdrop-blur-lg border-b border-border">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gradient-blue flex items-center justify-center shadow-blue">
-            <span className="text-primary-foreground font-display font-bold text-sm">B</span>
-          </div>
+          <img
+            src="/betview_logo_primary.png"
+            alt="BetView Logo"
+            className="h-8 w-auto object-contain"
+          />
           <span className="font-display font-semibold text-xl text-foreground tracking-tight">
             BetView
           </span>

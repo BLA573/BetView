@@ -35,10 +35,13 @@ const HeroSection = () => {
       {/* ── NAVBAR (original desktop layout, hamburger added for mobile) ── */}
       <nav className="relative z-10 flex items-center justify-between px-6 md:px-16 py-6">
         {/* Logo — always visible */}
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gradient-blue flex items-center justify-center shadow-blue">
-            <span className="text-primary-foreground font-display font-bold text-sm">B</span>
-          </div>
+        <div className="flex items-center">
+          <img
+            src="/betview_logo_primary.png"
+            alt="BetView logo"
+            className="h-10 w-auto object-contain"
+          />
+
           <span className="font-display font-semibold text-xl text-white tracking-tight">
             BetView <span className="text-blue-glow font-light">ቤት View</span>
           </span>
@@ -100,11 +103,12 @@ const HeroSection = () => {
           >
             {/* Panel header */}
             <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'hsl(215,40%,18%)' }}>
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg gradient-blue flex items-center justify-center shadow-blue">
-                  <span className="text-white font-bold text-xs">B</span>
-                </div>
-                <span className="font-display font-semibold text-white">BetView</span>
+              <div className="flex items-center">
+                <img
+                  src="/betview_logo_primary.png"
+                  alt="BetView logo"
+                  className="h-8 w-auto object-contain"
+                />
               </div>
               <button
                 onClick={() => setMobileMenuOpen(false)}

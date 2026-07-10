@@ -48,9 +48,11 @@ const AdminSidebar = () => {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg gradient-blue flex items-center justify-center shadow-blue flex-shrink-0">
-            <span className="text-primary-foreground font-display font-bold text-sm">B</span>
-          </div>
+          <img
+            src="/betview_logo_primary.png"
+            alt="BetView Logo"
+            className="h-8 w-auto object-contain flex-shrink-0"
+          />
           {!collapsed && (
             <span className="font-display font-semibold text-lg text-sidebar-foreground tracking-tight">
               BetView Admin

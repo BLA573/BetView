@@ -41,9 +41,11 @@ const ForgotPassword = () => {
             <div className="w-full max-w-md space-y-8">
                 <div className="text-center">
                     <Link to="/auth" className="inline-flex items-center gap-2 mb-6">
-                        <div className="w-8 h-8 rounded-lg gradient-blue flex items-center justify-center shadow-blue">
-                            <span className="text-primary-foreground font-display font-bold text-sm">B</span>
-                        </div>
+                        <img
+                            src="/betview_logo_primary.png"
+                            alt="BetView Logo"
+                            className="h-8 w-auto object-contain"
+                        />
                         <span className="font-display font-semibold text-xl text-foreground tracking-tight">
                             BetView <span className="text-accent font-light">ቤት View</span>
                         </span>
